@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System;
+using System.Windows.Controls;
 using EducationalPlatformDesktop.Commands;
 
 namespace EducationalPlatformDesktop.ViewModels
@@ -69,6 +70,8 @@ namespace EducationalPlatformDesktop.ViewModels
 
         public RelayCommand LoginCommand { get; }
 
+        public event Action? LoginSucceeded;
+
         public LoginViewModel()
         {
             LoginCommand = new RelayCommand(ExecuteLogin);
@@ -88,7 +91,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
             ErrorMessage = string.Empty;
             SuccessMessage = "Вход выполнен успешно.";
+            LoginSucceeded?.Invoke();
         }
-
     }
 }
