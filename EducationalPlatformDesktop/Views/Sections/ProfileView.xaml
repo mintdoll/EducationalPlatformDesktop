@@ -1,0 +1,86 @@
+﻿<UserControl x:Class="EducationalPlatformDesktop.Views.Sections.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid Margin="24">
+        <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="24"
+                Width="520"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Профиль"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           Margin="0,0,0,16" />
+
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,0,0,18">
+                    <Border Width="52"
+                            Height="52"
+                            CornerRadius="26"
+                            Background="{StaticResource AccentBrush}">
+                        <TextBlock Text="{Binding Profile.Initials}"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+
+                    <StackPanel Margin="14,0,0,0"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Profile.FullName}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding Profile.Role}"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Profile.FullName, StringFormat=ФИО: {0}}"
+                           FontSize="13"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding Profile.EmailOrMax, StringFormat=Email/MAX: {0}}"
+                           FontSize="13"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding Profile.Group, StringFormat=Группа: {0}}"
+                           FontSize="13"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding Profile.Role, StringFormat=Роль: {0}}"
+                           FontSize="13"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,0,0,8" />
+
+                <Border Background="White"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="16"
+                        Margin="0,18,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Что дальше"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,8" />
+                        <TextBlock Text="На следующем шаге можно будет отдельно улучшать профиль или вынести его в отдельный экран без изменения общей оболочки."
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

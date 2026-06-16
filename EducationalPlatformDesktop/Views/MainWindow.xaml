@@ -1,312 +1,115 @@
 ﻿<Window x:Class="EducationalPlatformDesktop.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="EducationalPlatformDesktop"
-        WindowStartupLocation="CenterScreen"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="EducationalPlatform"
         WindowState="Maximized"
-        Background="White">
-
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-
-        <Style x:Key="SidebarButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Margin" Value="0,0,0,10" />
-            <Setter Property="Background" Value="#2D2A5E" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <DataTemplate x:Key="CourseCardTemplate">
-            <Border Background="#EEEDFE"
-                    CornerRadius="12"
-                    Padding="16"
-                    Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="{Binding Title}"
-                               Foreground="#1A1A2E"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6" />
-                    <TextBlock Text="{Binding Description}"
-                               Foreground="#534AB7"
-                               FontSize="12"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,10" />
-                    <TextBlock Text="{Binding Modules.Count, StringFormat=Модулей: {0}}"
-                               Foreground="#7F77DD"
-                               FontSize="11" />
-                </StackPanel>
-            </Border>
-        </DataTemplate>
-    </Window.Resources>
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource PageBackgroundBrush}">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="320" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
+        <!-- Левая панель -->
         <Border Grid.Column="0"
-                Background="#1A1A2E"
-                Padding="20">
-            <DockPanel LastChildFill="True">
+                Background="{StaticResource SidebarBackgroundBrush}">
+            <Grid Margin="24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,24">
+                <!-- Блок с названием -->
+                <StackPanel Grid.Row="0" Margin="0,8,0,28">
                     <TextBlock Text="EducationalPlatform"
-                               Foreground="White"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Margin="0,0,0,4" />
-                    <TextBlock Text="Демонстрационная оболочка"
-                               Foreground="#CECBF6"
-                               FontSize="12" />
-                </StackPanel>
-
-                <StackPanel>
-
-                    <Button Content="Главная"
-                            Command="{Binding ShowHomeCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" Width="208" />
-
-                    <Button Content="Курсы"
-                            Command="{Binding ShowCoursesCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" />
-
-                    <Button Content="Профиль"
-                            Command="{Binding ShowProfileCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" />
-
-                    <Button Content="Выйти"
-                            Command="{Binding ExitCommand}"
-                            Height="42"
-                            Background="#534AB7"
-                            Foreground="White"
-                            BorderThickness="0"
-                            Cursor="Hand" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <Grid Grid.Column="1" Background="#F5F5F7">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="100" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0"
-                    Background="#1A1A2E"
-                    BorderBrush="#2D2A5E"
-                    BorderThickness="0,0,0,1"
-                    Padding="28,18">
-                <StackPanel>
-                    <TextBlock Text="{Binding PageTitle}"
                                Foreground="White"
                                FontSize="26"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding PageDescription}"
-                               Foreground="#CECBF6"
+                    <TextBlock Text="Демонстрационная оболочка"
+                               Foreground="{StaticResource TextMutedBrush}"
                                FontSize="13"
                                Margin="0,6,0,0" />
                 </StackPanel>
-            </Border>
 
-            <Grid Grid.Row="1" Margin="28">
-
-                <Grid Visibility="{Binding IsHomeVisible, Converter={StaticResource BoolToVis}}">
+                <!-- Навигация -->
+                <Grid Grid.Row="1">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Border Background="White"
-                            CornerRadius="18"
-                            Padding="24"
-                            Margin="0,0,0,18">
-                        <StackPanel>
-                            <TextBlock Text="Добро пожаловать!"
-                                       Foreground="#1A1A2E"
-                                       FontSize="20"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,10" />
-                            <TextBlock Text="Это демонстрационная версия WPF-клиента. Здесь позже будет полноценная навигация по курсам, модулям, урокам и тестам."
-                                       Foreground="#555"
-                                       TextWrapping="Wrap"
-                                       FontSize="13"
-                                       Margin="0,0,0,14" />
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="ОБУЧЕНИЕ"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="11"
+                                   Margin="0,0,0,10" />
 
-                            <UniformGrid Columns="3">
-                                <Border Background="#EEEDFE"
-                                        CornerRadius="12"
-                                        Padding="14"
-                                        Margin="0,0,10,0">
-                                    <StackPanel>
-                                        <TextBlock Text="Курсов в системе"
-                                                   Foreground="#7F77DD"
-                                                   FontSize="11" />
-                                        <TextBlock Text="{Binding AllCourses.Count}"
-                                                   Foreground="#1A1A2E"
-                                                   FontSize="22"
-                                                   FontWeight="SemiBold" />
-                                    </StackPanel>
-                                </Border>
+                        <Button Content="Главная"
+                                Command="{Binding ShowHomeCommand}"
+                                Style="{StaticResource HomeSidebarButtonStyle}" />
 
-                                <Border Background="#EEEDFE"
-                                        CornerRadius="12"
-                                        Padding="14"
-                                        Margin="0,0,10,0">
-                                    <StackPanel>
-                                        <TextBlock Text="Купленных курсов"
-                                                   Foreground="#7F77DD"
-                                                   FontSize="11" />
-                                        <TextBlock Text="{Binding PurchasedCourses.Count}"
-                                                   Foreground="#1A1A2E"
-                                                   FontSize="22"
-                                                   FontWeight="SemiBold" />
-                                    </StackPanel>
-                                </Border>
+                        <Button Content="Курсы"
+                                Command="{Binding ShowCoursesCommand}"
+                                Style="{StaticResource CoursesSidebarButtonStyle}" />
 
-                                <Border Background="#EEEDFE"
-                                        CornerRadius="12"
-                                        Padding="14">
-                                    <StackPanel>
-                                        <TextBlock Text="Доступных курсов"
-                                                   Foreground="#7F77DD"
-                                                   FontSize="11" />
-                                        <TextBlock Text="{Binding AvailableCourses.Count}"
-                                                   Foreground="#1A1A2E"
-                                                   FontSize="22"
-                                                   FontWeight="SemiBold" />
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                        </StackPanel>
-                    </Border>
+                        <Button Content="Профиль"
+                                Command="{Binding ShowProfileCommand}"
+                                Style="{StaticResource ProfileSidebarButtonStyle}" />
+                    </StackPanel>
 
-                    <Border Grid.Row="1"
-                            Background="White"
-                            CornerRadius="18"
-                            Padding="24">
-                        <StackPanel>
-                            <TextBlock Text="Быстрый обзор"
-                                       Foreground="#1A1A2E"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,16" />
-                            <TextBlock Text="{Binding Profile.FullName, StringFormat=Пользователь: {0}}"
-                                       Foreground="#444"
-                                       FontSize="13"
-                                       Margin="0,0,0,6" />
-                            <TextBlock Text="{Binding Profile.Group, StringFormat=Группа: {0}}"
-                                       Foreground="#444"
-                                       FontSize="13"
-                                       Margin="0,0,0,6" />
-                            <TextBlock Text="Дальше здесь появятся разделы с модулями, уроками и тестами."
-                                       Foreground="#888"
-                                       FontSize="12"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <Grid Visibility="{Binding IsCoursesVisible, Converter={StaticResource BoolToVis}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Background="White"
-                            CornerRadius="18"
-                            Padding="24"
-                            Margin="0,0,12,0">
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Top"
-                                       Text="Купленные курсы"
-                                       Foreground="#1A1A2E"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,16" />
-
-                            <ItemsControl ItemsSource="{Binding PurchasedCourses}"
-                                          ItemTemplate="{StaticResource CourseCardTemplate}" />
-                        </DockPanel>
-                    </Border>
-
-                    <Border Grid.Column="1"
-                            Background="White"
-                            CornerRadius="18"
-                            Padding="24"
-                            Margin="12,0,0,0">
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Top"
-                                       Text="Доступные курсы"
-                                       Foreground="#1A1A2E"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,16" />
-
-                            <ItemsControl ItemsSource="{Binding AvailableCourses}"
-                                          ItemTemplate="{StaticResource CourseCardTemplate}" />
-                        </DockPanel>
-                    </Border>
-                </Grid>
-
-                <Grid Visibility="{Binding IsProfileVisible, Converter={StaticResource BoolToVis}}">
-                    <Border Background="White"
-                            CornerRadius="18"
-                            Padding="28"
-                            Width="520"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top">
-                        <StackPanel>
-                            <TextBlock Text="Профиль пользователя"
-                                       Foreground="#1A1A2E"
-                                       FontSize="20"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,18" />
-
-                            <TextBlock Text="{Binding Profile.FullName, StringFormat=ФИО: {0}}"
-                                       Foreground="#444"
-                                       FontSize="14"
-                                       Margin="0,0,0,10" />
-
-                            <TextBlock Text="{Binding Profile.EmailOrMax, StringFormat=Email/MAX: {0}}"
-                                       Foreground="#444"
-                                       FontSize="14"
-                                       Margin="0,0,0,10" />
-
-                            <TextBlock Text="{Binding Profile.Group, StringFormat=Группа: {0}}"
-                                       Foreground="#444"
-                                       FontSize="14"
-                                       Margin="0,0,0,10" />
-
-                            <TextBlock Text="{Binding Profile.Role, StringFormat=Роль: {0}}"
-                                       Foreground="#444"
-                                       FontSize="14"
-                                       Margin="0,0,0,18" />
-
-                            <Border Background="#EEEDFE"
-                                    CornerRadius="12"
-                                    Padding="16">
-                                <StackPanel>
-                                    <TextBlock Text="Что будет дальше"
-                                               Foreground="#1A1A2E"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,8" />
-                                    <TextBlock Text="На следующем этапе здесь появятся модули курса, уроки и текст лекции."
-                                               Foreground="#7F77DD"
-                                               FontSize="12"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                    <Button Grid.Row="1"
+                            VerticalAlignment="Bottom"
+                            Content="Выйти"
+                            Command="{Binding ExitCommand}"
+                            Height="44"
+                            Margin="0,20,0,0"
+                            Background="{StaticResource AccentBrush}"
+                            Foreground="White"
+                            BorderBrush="{StaticResource AccentBorderBrush}"
+                            BorderThickness="1"
+                            FontWeight="SemiBold"
+                            FontSize="14"
+                            Cursor="Hand" />
                 </Grid>
             </Grid>
+        </Border>
+
+        <!-- Основная область -->
+        <Grid Grid.Column="1"
+              Background="{StaticResource PageBackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Верхняя шапка -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource PageBackgroundBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="28,22">
+                <StackPanel>
+                    <TextBlock Text="{Binding PageTitle}"
+                               FontSize="32"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" />
+                    <TextBlock Text="{Binding PageDescription}"
+                               FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Контент разделов -->
+            <ContentControl Grid.Row="1"
+                            Content="{Binding CurrentView}"
+                            Margin="0" />
         </Grid>
     </Grid>
 </Window>

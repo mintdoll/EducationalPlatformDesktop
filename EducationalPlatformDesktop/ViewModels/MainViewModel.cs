@@ -4,13 +4,19 @@ using System.Linq;
 using EducationalPlatformDesktop.Commands;
 using EducationalPlatformDesktop.Mocks;
 using EducationalPlatformDesktop.Models;
+using EducationalPlatformDesktop.Views.Sections;
 
 namespace EducationalPlatformDesktop.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private string _pageTitle = "Мои курсы";
-        private string _pageDescription = "Выберите курс, затем модуль и урок для просмотра лекции.";
+        private readonly HomeView _homeView = new();
+        private readonly CoursesView _coursesView = new();
+        private readonly ProfileView _profileView = new();
+
+        private object _currentView = null!;
+        private string _pageTitle = "Главная";
+        private string _pageDescription = "Стартовый экран демонстрационной оболочки.";
 
         private Course? _selectedCourse;
         private Module? _selectedModule;
@@ -19,26 +25,39 @@ namespace EducationalPlatformDesktop.ViewModels
 
         public MainViewModel()
         {
+            Profile = DemoEducationData.GetProfile();
             Courses = DemoEducationData.GetCourses();
 
-            ActiveCoursesCount = Courses.Count(c => c.IsPurchased);
-            LessonsCompletedCount = Courses.Sum(c => c.Modules.Sum(m => m.Lessons.Count)) / 2;
-            CertificatesCount = 1;
-
+            ShowHomeCommand = new RelayCommand(_ => ShowHome());
             ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
-            ShowCatalogCommand = new RelayCommand(_ => ShowCatalog());
-            ShowTestingCommand = new RelayCommand(_ => ShowTesting());
             ShowProfileCommand = new RelayCommand(_ => ShowProfile());
             ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
 
-            SelectCourseCommand = new RelayCommand(course => SelectCourse(course as Course));
-            SelectModuleCommand = new RelayCommand(module => SelectModule(module as Module));
-            SelectLessonCommand = new RelayCommand(lesson => SelectLesson(lesson as Lesson));
+            CurrentView = _homeView;
 
-            SelectedCourse = Courses.FirstOrDefault();
+            if (Courses.Count > 0)
+            {
+                SelectedCourse = Courses.First();
+            }
         }
 
         public event Action? RequestClose;
+
+        public object CurrentView
+        {
+            get => _currentView;
+            set
+            {
+                if (_currentView != value)
+                {
+                    _currentView = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsHomeVisible));
+                    OnPropertyChanged(nameof(IsCoursesVisible));
+                    OnPropertyChanged(nameof(IsProfileVisible));
+                }
+            }
+        }
 
         public string PageTitle
         {
@@ -66,19 +85,15 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
+        public bool IsHomeVisible => CurrentView == _homeView;
+        public bool IsCoursesVisible => CurrentView == _coursesView;
+        public bool IsProfileVisible => CurrentView == _profileView;
+
+        public UserProfile Profile { get; }
+
         public ObservableCollection<Course> Courses { get; }
-
-        public ObservableCollection<Module> Modules
-        {
-            get;
-            private set;
-        } = new();
-
-        public ObservableCollection<Lesson> Lessons
-        {
-            get;
-            private set;
-        } = new();
+        public ObservableCollection<Module> Modules { get; } = new();
+        public ObservableCollection<Lesson> Lessons { get; } = new();
 
         public Course? SelectedCourse
         {
@@ -135,74 +150,30 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
-        public int ActiveCoursesCount { get; }
-        public int LessonsCompletedCount { get; }
-        public int CertificatesCount { get; }
-
+        public RelayCommand ShowHomeCommand { get; }
         public RelayCommand ShowCoursesCommand { get; }
-        public RelayCommand ShowCatalogCommand { get; }
-        public RelayCommand ShowTestingCommand { get; }
         public RelayCommand ShowProfileCommand { get; }
         public RelayCommand ExitCommand { get; }
 
-        public RelayCommand SelectCourseCommand { get; }
-        public RelayCommand SelectModuleCommand { get; }
-        public RelayCommand SelectLessonCommand { get; }
+        private void ShowHome()
+        {
+            CurrentView = _homeView;
+            PageTitle = "Главная";
+            PageDescription = "Стартовый экран демонстрационной оболочки.";
+        }
 
         private void ShowCourses()
         {
-            PageTitle = "Мои курсы";
-            PageDescription = "Выберите курс, затем модуль и урок для просмотра лекции.";
-        }
-
-        private void ShowCatalog()
-        {
-            PageTitle = "Каталог";
-            PageDescription = "Список доступных курсов.";
-        }
-
-        private void ShowTesting()
-        {
-            PageTitle = "Тестирование";
-            PageDescription = "Этот раздел будет делать студент 2.";
+            CurrentView = _coursesView;
+            PageTitle = "Курсы";
+            PageDescription = "Просмотр курсов, модулей, уроков и текста лекции.";
         }
 
         private void ShowProfile()
         {
+            CurrentView = _profileView;
             PageTitle = "Профиль";
             PageDescription = "Информация об авторизованном пользователе.";
-        }
-
-        private void SelectCourse(Course? course)
-        {
-            if (course == null)
-            {
-                return;
-            }
-
-            SelectedCourse = course;
-            PageTitle = course.Title;
-            PageDescription = $"{course.Track} · {course.Teacher}";
-        }
-
-        private void SelectModule(Module? module)
-        {
-            if (module == null)
-            {
-                return;
-            }
-
-            SelectedModule = module;
-        }
-
-        private void SelectLesson(Lesson? lesson)
-        {
-            if (lesson == null)
-            {
-                return;
-            }
-
-            SelectedLesson = lesson;
         }
 
         private void UpdateModulesForSelectedCourse()
@@ -210,8 +181,11 @@ namespace EducationalPlatformDesktop.ViewModels
             Modules.Clear();
             Lessons.Clear();
 
-            SelectedModule = null;
-            SelectedLesson = null;
+            _selectedModule = null;
+            _selectedLesson = null;
+            OnPropertyChanged(nameof(SelectedModule));
+            OnPropertyChanged(nameof(SelectedLesson));
+
             LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
 
             if (SelectedCourse == null)
@@ -224,13 +198,19 @@ namespace EducationalPlatformDesktop.ViewModels
                 Modules.Add(module);
             }
 
-            SelectedModule = Modules.FirstOrDefault();
+            if (Modules.Count > 0)
+            {
+                SelectedModule = Modules.First();
+            }
         }
 
         private void UpdateLessonsForSelectedModule()
         {
             Lessons.Clear();
-            SelectedLesson = null;
+
+            _selectedLesson = null;
+            OnPropertyChanged(nameof(SelectedLesson));
+
             LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
 
             if (SelectedModule == null)
@@ -243,18 +223,15 @@ namespace EducationalPlatformDesktop.ViewModels
                 Lessons.Add(lesson);
             }
 
-            SelectedLesson = Lessons.FirstOrDefault();
+            if (Lessons.Count > 0)
+            {
+                SelectedLesson = Lessons.First();
+            }
         }
 
         private void UpdateLessonContent()
         {
-            if (SelectedLesson == null)
-            {
-                LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
-                return;
-            }
-
-            LessonContent = SelectedLesson.Content;
+            LessonContent = SelectedLesson?.Content ?? "Выберите урок, чтобы увидеть текст лекции.";
         }
     }
 }
