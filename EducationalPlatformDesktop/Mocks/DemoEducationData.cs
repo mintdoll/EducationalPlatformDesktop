@@ -10,7 +10,7 @@ namespace EducationalPlatformDesktop.Mocks
             return new UserProfile
             {
                 FullName = "Арина Бутакова",
-                EmailOrMax = "butakovaarina717@gmail.com",
+                EmailOrMax = "arina@example.com",
                 Group = "БИ-24-1",
                 Role = "Студент"
             };

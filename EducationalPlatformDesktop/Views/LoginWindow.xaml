@@ -9,20 +9,16 @@
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         ResizeMode="NoResize"
-        Background="#0F172A">
+        Background="#1A1A2E">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
 
-    <Window.DataContext>
-        <vm:LoginViewModel />
-    </Window.DataContext>
-
     <Grid>
         <Border Width="330"
                 Padding="28"
-                Background="#111827"
+                Background="#534AB7"
                 CornerRadius="18"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
@@ -36,7 +32,7 @@
 
                 <TextBlock Text="Введите данные для входа"
                            FontSize="13"
-                           Foreground="#9CA3AF"
+                           Foreground="#CECBF6"
                            Margin="0,0,0,18"
                            HorizontalAlignment="Center"/>
 
@@ -55,36 +51,34 @@
                            Visibility="{Binding IsSuccessVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <TextBlock Text="Логин"
-                           Foreground="#D1D5DB"
+                           Foreground="#CECBF6"
                            Margin="0,8,0,6" />
 
                 <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
                          Height="34"
                          Padding="10,6"
-                         Background="#1F2937"
+                         Background="#1A1A2E"
                          Foreground="White"
-                         BorderBrush="#374151"
-                         BorderThickness="1"
+                         BorderThickness="0"
                          CaretBrush="White" />
 
                 <TextBlock Text="Пароль"
-                           Foreground="#D1D5DB"
+                           Foreground="#CECBF6"
                            Margin="0,14,0,6" />
 
                 <PasswordBox x:Name="PasswordInput"
                              Height="34"
                              Padding="10,6"
-                             Background="#1F2937"
+                             Background="#1A1A2E"
                              Foreground="White"
-                             BorderBrush="#374151"
-                             BorderThickness="1" />
+                             BorderThickness="0" />
 
                 <Button Content="Войти"
                         Command="{Binding LoginCommand}"
                         CommandParameter="{Binding ElementName=PasswordInput}"
                         Height="36"
                         Margin="0,18,0,0"
-                        Background="#2563EB"
+                        Background="#7F77DD"
                         Foreground="White"
                         FontWeight="SemiBold"
                         BorderThickness="0"

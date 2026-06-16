@@ -10,9 +10,9 @@ namespace EducationalPlatformDesktop.ViewModels
     {
         private string _pageTitle = "Главная";
         private string _pageDescription = "Стартовый экран демонстрационной версии приложения.";
+        private string _currentSection = "home";
 
-        private UserProfile _profile = DemoEducationData.GetProfile();
-        private ObservableCollection<Course> _courses = DemoEducationData.GetCourses();
+        private readonly ObservableCollection<Course> _allCourses = DemoEducationData.GetCourses();
 
         public string PageTitle
         {
@@ -40,84 +40,88 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
-        public UserProfile Profile
+        public string CurrentSection
         {
-            get => _profile;
+            get => _currentSection;
             set
             {
-                if (_profile != value)
+                if (_currentSection != value)
                 {
-                    _profile = value;
+                    _currentSection = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsHomeVisible));
+                    OnPropertyChanged(nameof(IsCoursesVisible));
+                    OnPropertyChanged(nameof(IsProfileVisible));
                 }
             }
         }
 
-        public ObservableCollection<Course> Courses
-        {
-            get => _courses;
-            set
-            {
-                if (_courses != value)
-                {
-                    _courses = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public bool IsHomeVisible => CurrentSection == "home";
+        public bool IsCoursesVisible => CurrentSection == "courses";
+        public bool IsProfileVisible => CurrentSection == "profile";
 
-        public ObservableCollection<string> DemoItems { get; } = new();
+        public UserProfile Profile { get; } = DemoEducationData.GetProfile();
+
+        public ObservableCollection<Course> AllCourses => _allCourses;
+
+        public ObservableCollection<Course> PurchasedCourses { get; } = new();
+        public ObservableCollection<Course> AvailableCourses { get; } = new();
 
         public RelayCommand ShowHomeCommand { get; }
         public RelayCommand ShowCoursesCommand { get; }
         public RelayCommand ShowProfileCommand { get; }
+        public RelayCommand ExitCommand { get; }
 
         public event Action? RequestClose;
 
         public MainViewModel()
         {
-            ShowHomeCommand = new RelayCommand(_ => SetHome());
-            ShowCoursesCommand = new RelayCommand(_ => SetCourses());
-            ShowProfileCommand = new RelayCommand(_ => SetProfile());
+            ShowHomeCommand = new RelayCommand(_ => ShowHome());
+            ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
+            ShowProfileCommand = new RelayCommand(_ => ShowProfile());
+            ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
 
-            SetHome();
+            BuildCourseLists();
+            ShowHome();
         }
 
-        private void SetHome()
+        private void BuildCourseLists()
         {
-            PageTitle = "Главная";
-            PageDescription = "Демонстрационная оболочка приложения для просмотра профиля и курсов.";
+            PurchasedCourses.Clear();
+            AvailableCourses.Clear();
 
-            DemoItems.Clear();
-            DemoItems.Add("Добро пожаловать в образовательную платформу.");
-            DemoItems.Add("Здесь будет показан доступ к курсам, модулям и урокам.");
-            DemoItems.Add("Пока данные берутся из mock-источника.");
-        }
-
-        private void SetCourses()
-        {
-            PageTitle = "Курсы";
-            PageDescription = "Список доступных и купленных курсов.";
-
-            DemoItems.Clear();
-
-            foreach (var course in Courses)
+            foreach (var course in AllCourses)
             {
-                var status = course.IsPurchased ? "куплен" : "доступен";
-                DemoItems.Add($"{course.Title} - {status}");
+                if (course.IsPurchased)
+                {
+                    PurchasedCourses.Add(course);
+                }
+                else
+                {
+                    AvailableCourses.Add(course);
+                }
             }
         }
 
-        private void SetProfile()
+        private void ShowHome()
         {
+            CurrentSection = "home";
+            PageTitle = "Главная";
+            PageDescription = "Стартовый экран демонстрационного приложения по ТЗ.";
+        }
+
+        private void ShowCourses()
+        {
+            CurrentSection = "courses";
+            PageTitle = "Курсы";
+            PageDescription = "Список доступных и купленных курсов.";
+        }
+
+        private void ShowProfile()
+        {
+            CurrentSection = "profile";
             PageTitle = "Профиль";
             PageDescription = "Информация о пользователе.";
-
-            DemoItems.Clear();
-            DemoItems.Add($"ФИО: {Profile.FullName}");
-            DemoItems.Add($"Email/MAX: {Profile.EmailOrMax}");
-            DemoItems.Add($"Группа: {Profile.Group}");
-            DemoItems.Add($"Роль: {Profile.Role}");
         }
     }
 }
