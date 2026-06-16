@@ -1,18 +1,63 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using EducationalPlatformDesktop.Commands;
 using EducationalPlatformDesktop.Mocks;
 using EducationalPlatformDesktop.Models;
+using EducationalPlatformDesktop.Views.Sections;
 
 namespace EducationalPlatformDesktop.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private string _pageTitle = "Главная";
-        private string _pageDescription = "Стартовый экран демонстрационной версии приложения.";
-        private string _currentSection = "home";
+        private readonly HomeView _homeView = new();
+        private readonly CoursesView _coursesView = new();
+        private readonly ProfileView _profileView = new();
 
-        private readonly ObservableCollection<Course> _allCourses = DemoEducationData.GetCourses();
+        private object _currentView = null!;
+        private string _pageTitle = "Главная";
+        private string _pageDescription = "Стартовый экран демонстрационной оболочки.";
+
+        private Course? _selectedCourse;
+        private Module? _selectedModule;
+        private Lesson? _selectedLesson;
+        private string _lessonContent = "Выберите урок, чтобы увидеть текст лекции.";
+
+        public MainViewModel()
+        {
+            Profile = DemoEducationData.GetProfile();
+            Courses = DemoEducationData.GetCourses();
+
+            ShowHomeCommand = new RelayCommand(_ => ShowHome());
+            ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
+            ShowProfileCommand = new RelayCommand(_ => ShowProfile());
+            ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
+
+            CurrentView = _homeView;
+
+            if (Courses.Count > 0)
+            {
+                SelectedCourse = Courses.First();
+            }
+        }
+
+        public event Action? RequestClose;
+
+        public object CurrentView
+        {
+            get => _currentView;
+            set
+            {
+                if (_currentView != value)
+                {
+                    _currentView = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsHomeVisible));
+                    OnPropertyChanged(nameof(IsCoursesVisible));
+                    OnPropertyChanged(nameof(IsProfileVisible));
+                }
+            }
+        }
 
         public string PageTitle
         {
@@ -40,88 +85,153 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
-        public string CurrentSection
+        public bool IsHomeVisible => CurrentView == _homeView;
+        public bool IsCoursesVisible => CurrentView == _coursesView;
+        public bool IsProfileVisible => CurrentView == _profileView;
+
+        public UserProfile Profile { get; }
+
+        public ObservableCollection<Course> Courses { get; }
+        public ObservableCollection<Module> Modules { get; } = new();
+        public ObservableCollection<Lesson> Lessons { get; } = new();
+
+        public Course? SelectedCourse
         {
-            get => _currentSection;
+            get => _selectedCourse;
             set
             {
-                if (_currentSection != value)
+                if (_selectedCourse != value)
                 {
-                    _currentSection = value;
+                    _selectedCourse = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsHomeVisible));
-                    OnPropertyChanged(nameof(IsCoursesVisible));
-                    OnPropertyChanged(nameof(IsProfileVisible));
+                    UpdateModulesForSelectedCourse();
                 }
             }
         }
 
-        public bool IsHomeVisible => CurrentSection == "home";
-        public bool IsCoursesVisible => CurrentSection == "courses";
-        public bool IsProfileVisible => CurrentSection == "profile";
+        public Module? SelectedModule
+        {
+            get => _selectedModule;
+            set
+            {
+                if (_selectedModule != value)
+                {
+                    _selectedModule = value;
+                    OnPropertyChanged();
+                    UpdateLessonsForSelectedModule();
+                }
+            }
+        }
 
-        public UserProfile Profile { get; } = DemoEducationData.GetProfile();
+        public Lesson? SelectedLesson
+        {
+            get => _selectedLesson;
+            set
+            {
+                if (_selectedLesson != value)
+                {
+                    _selectedLesson = value;
+                    OnPropertyChanged();
+                    UpdateLessonContent();
+                }
+            }
+        }
 
-        public ObservableCollection<Course> AllCourses => _allCourses;
-
-        public ObservableCollection<Course> PurchasedCourses { get; } = new();
-        public ObservableCollection<Course> AvailableCourses { get; } = new();
+        public string LessonContent
+        {
+            get => _lessonContent;
+            set
+            {
+                if (_lessonContent != value)
+                {
+                    _lessonContent = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public RelayCommand ShowHomeCommand { get; }
         public RelayCommand ShowCoursesCommand { get; }
         public RelayCommand ShowProfileCommand { get; }
         public RelayCommand ExitCommand { get; }
 
-        public event Action? RequestClose;
-
-        public MainViewModel()
-        {
-            ShowHomeCommand = new RelayCommand(_ => ShowHome());
-            ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
-            ShowProfileCommand = new RelayCommand(_ => ShowProfile());
-            ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
-
-            BuildCourseLists();
-            ShowHome();
-        }
-
-        private void BuildCourseLists()
-        {
-            PurchasedCourses.Clear();
-            AvailableCourses.Clear();
-
-            foreach (var course in AllCourses)
-            {
-                if (course.IsPurchased)
-                {
-                    PurchasedCourses.Add(course);
-                }
-                else
-                {
-                    AvailableCourses.Add(course);
-                }
-            }
-        }
-
         private void ShowHome()
         {
-            CurrentSection = "home";
+            CurrentView = _homeView;
             PageTitle = "Главная";
-            PageDescription = "Стартовый экран демонстрационного приложения по ТЗ.";
+            PageDescription = "Стартовый экран демонстрационной оболочки.";
         }
 
         private void ShowCourses()
         {
-            CurrentSection = "courses";
+            CurrentView = _coursesView;
             PageTitle = "Курсы";
-            PageDescription = "Список доступных и купленных курсов.";
+            PageDescription = "Просмотр курсов, модулей, уроков и текста лекции.";
         }
 
         private void ShowProfile()
         {
-            CurrentSection = "profile";
+            CurrentView = _profileView;
             PageTitle = "Профиль";
-            PageDescription = "Информация о пользователе.";
+            PageDescription = "Информация об авторизованном пользователе.";
+        }
+
+        private void UpdateModulesForSelectedCourse()
+        {
+            Modules.Clear();
+            Lessons.Clear();
+
+            _selectedModule = null;
+            _selectedLesson = null;
+            OnPropertyChanged(nameof(SelectedModule));
+            OnPropertyChanged(nameof(SelectedLesson));
+
+            LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
+
+            if (SelectedCourse == null)
+            {
+                return;
+            }
+
+            foreach (var module in SelectedCourse.Modules)
+            {
+                Modules.Add(module);
+            }
+
+            if (Modules.Count > 0)
+            {
+                SelectedModule = Modules.First();
+            }
+        }
+
+        private void UpdateLessonsForSelectedModule()
+        {
+            Lessons.Clear();
+
+            _selectedLesson = null;
+            OnPropertyChanged(nameof(SelectedLesson));
+
+            LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
+
+            if (SelectedModule == null)
+            {
+                return;
+            }
+
+            foreach (var lesson in SelectedModule.Lessons)
+            {
+                Lessons.Add(lesson);
+            }
+
+            if (Lessons.Count > 0)
+            {
+                SelectedLesson = Lessons.First();
+            }
+        }
+
+        private void UpdateLessonContent()
+        {
+            LessonContent = SelectedLesson?.Content ?? "Выберите урок, чтобы увидеть текст лекции.";
         }
     }
 }
