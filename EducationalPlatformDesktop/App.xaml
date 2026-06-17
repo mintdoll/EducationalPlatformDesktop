@@ -6,6 +6,7 @@
 
         <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1A1A2E" />
         <SolidColorBrush x:Key="PageBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#F3F1EA" />
         <SolidColorBrush x:Key="AccentBrush" Color="#534AB7" />
         <SolidColorBrush x:Key="AccentBorderBrush" Color="#7F77DD" />

@@ -13,6 +13,7 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly HomeView _homeView = new();
         private readonly CoursesView _coursesView = new();
         private readonly ProfileView _profileView = new();
+        private readonly LessonView _lessonView = new();
 
         private object _currentView = null!;
         private string _pageTitle = "Главная";
@@ -31,6 +32,7 @@ namespace EducationalPlatformDesktop.ViewModels
             ShowHomeCommand = new RelayCommand(_ => ShowHome());
             ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
             ShowProfileCommand = new RelayCommand(_ => ShowProfile());
+            OpenLessonCommand = new RelayCommand(param => OpenLesson(param as Lesson));
             ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
 
             CurrentView = _homeView;
@@ -153,6 +155,7 @@ namespace EducationalPlatformDesktop.ViewModels
         public RelayCommand ShowHomeCommand { get; }
         public RelayCommand ShowCoursesCommand { get; }
         public RelayCommand ShowProfileCommand { get; }
+        public RelayCommand OpenLessonCommand { get; }
         public RelayCommand ExitCommand { get; }
 
         private void ShowHome()
@@ -166,7 +169,7 @@ namespace EducationalPlatformDesktop.ViewModels
         {
             CurrentView = _coursesView;
             PageTitle = "Курсы";
-            PageDescription = "Просмотр курсов, модулей, уроков и текста лекции.";
+            PageDescription = "Просмотр курсов, модулей и уроков.";
         }
 
         private void ShowProfile()
@@ -174,6 +177,24 @@ namespace EducationalPlatformDesktop.ViewModels
             CurrentView = _profileView;
             PageTitle = "Профиль";
             PageDescription = "Информация об авторизованном пользователе.";
+        }
+
+        private void OpenLesson(Lesson? lesson)
+        {
+            if (lesson == null)
+            {
+                return;
+            }
+
+            SelectedLesson = lesson;
+            LessonContent = lesson.Content;
+
+            CurrentView = _lessonView;
+            PageTitle = lesson.Title;
+
+            PageDescription = SelectedCourse != null
+                ? $"{SelectedCourse.Title} · {SelectedModule?.Title}"
+                : "Текст лекции";
         }
 
         private void UpdateModulesForSelectedCourse()
@@ -221,11 +242,6 @@ namespace EducationalPlatformDesktop.ViewModels
             foreach (var lesson in SelectedModule.Lessons)
             {
                 Lessons.Add(lesson);
-            }
-
-            if (Lessons.Count > 0)
-            {
-                SelectedLesson = Lessons.First();
             }
         }
 
