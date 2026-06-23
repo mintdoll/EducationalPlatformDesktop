@@ -10,6 +10,7 @@ namespace EducationalPlatformDesktop.Mocks
             return new UserProfile
             {
                 FullName = "Арина Бутакова",
+                EmailOrMax = "arina.butakova@example.com",
                 Group = "БИ-24-1",
                 Role = "Студент"
             };
@@ -25,6 +26,9 @@ namespace EducationalPlatformDesktop.Mocks
                     Track = "IT",
                     Teacher = "Петров П.П.",
                     Description = "Основы программирования, типы данных, условия, циклы и функции.",
+                    Progress = 85,
+                    CompletedLessons = 3,
+                    IsPurchased = true,
                     Modules = new ObservableCollection<Module>
                     {
                         new Module
@@ -109,6 +113,9 @@ namespace EducationalPlatformDesktop.Mocks
                     Track = "Бухгалтерия",
                     Teacher = "Иванова А.С.",
                     Description = "Документы, счета, проводки, отчётность и основы финансового учёта.",
+                    Progress = 100,
+                    CompletedLessons = 4,
+                    IsPurchased = true,
                     Modules = new ObservableCollection<Module>
                     {
                         new Module
@@ -184,6 +191,9 @@ namespace EducationalPlatformDesktop.Mocks
                     Track = "Логистика",
                     Teacher = "Кузнецов Д.В.",
                     Description = "Логистические процессы, снабжение, склад и транспортная цепочка.",
+                    Progress = 0,
+                    CompletedLessons = 0,
+                    IsPurchased = false,
                     Modules = new ObservableCollection<Module>
                     {
                         new Module
