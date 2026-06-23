@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Controls;
 using EducationalPlatformDesktop.Commands;
 
@@ -6,6 +8,13 @@ namespace EducationalPlatformDesktop.ViewModels
 {
     public class LoginViewModel : ViewModelBase
     {
+        private static readonly Dictionary<string, string> DemoAccounts = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "arina@mail", "1234" },
+            { "student@mail", "1234" },
+            { "demo@mail", "demo123" }
+        };
+
         private string _login = string.Empty;
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
@@ -82,15 +91,24 @@ namespace EducationalPlatformDesktop.ViewModels
             var passwordBox = parameter as PasswordBox;
             Password = passwordBox?.Password ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(Login) || string.IsNullOrWhiteSpace(Password))
+            var login = Login.Trim();
+
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(Password))
             {
                 ErrorMessage = "Введите логин и пароль.";
                 SuccessMessage = string.Empty;
                 return;
             }
 
+            if (!DemoAccounts.TryGetValue(login, out var expectedPassword) || expectedPassword != Password)
+            {
+                ErrorMessage = "Неверный логин или пароль.";
+                SuccessMessage = string.Empty;
+                return;
+            }
+
             ErrorMessage = string.Empty;
-            SuccessMessage = "Вход выполнен успешно.";
+            SuccessMessage = $"Вход выполнен успешно. Добро пожаловать, {login}.";
             LoginSucceeded?.Invoke();
         }
     }
