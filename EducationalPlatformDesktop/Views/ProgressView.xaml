@@ -1,0 +1,74 @@
+﻿<UserControl x:Class="EducationalPlatformDesktop.Views.ProgressView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:EducationalPlatformDesktop.ViewModels"
+             Background="{StaticResource PageBackgroundBrush}">
+    <UserControl.DataContext>
+        <vm:ProgressViewModel/>
+    </UserControl.DataContext>
+
+    <StackPanel Margin="40">
+        <TextBlock Text="Мой прогресс"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   FontSize="24" FontWeight="Bold" Margin="0,0,0,24"/>
+
+        <ItemsControl ItemsSource="{Binding Items}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1" CornerRadius="12"
+                            Padding="20" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="{Binding CourseName}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       FontSize="16" FontWeight="SemiBold"/>
+
+                            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                                       FontSize="13" Margin="0,8,0,0">
+                                <Run Text="Уроков пройдено: "/>
+                                <Run Text="{Binding CompletedLessons}"/>
+                                <Run Text=" / "/>
+                                <Run Text="{Binding TotalLessons}"/>
+                            </TextBlock>
+
+                            <!-- Завершён -->
+                            <TextBlock Foreground="{StaticResource AccentBrush}"
+                                       FontSize="13" Margin="0,6,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                                <Run Text="✓ Завершён · Результат теста: "/>
+                                <Run Text="{Binding TestScore}"/>
+                                <Run Text="%"/>
+                            </TextBlock>
+
+                            <!-- В процессе -->
+                            <TextBlock Text="В процессе..."
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="13" Margin="0,6,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>
