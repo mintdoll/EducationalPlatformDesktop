@@ -28,11 +28,14 @@ namespace EducationalPlatformDesktop.ViewModels
         {
             Profile = DemoEducationData.GetProfile();
             Courses = DemoEducationData.GetCourses();
+            ProgressItems = MockTestData.GetProgress();
+            Certificates = MockTestData.GetCertificates();
 
             ShowHomeCommand = new RelayCommand(_ => ShowHome());
             ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
             ShowProfileCommand = new RelayCommand(_ => ShowProfile());
             OpenLessonCommand = new RelayCommand(param => OpenLesson(param as Lesson));
+            BackToCoursesCommand = new RelayCommand(_ => ShowCourses());
             ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
 
             CurrentView = _homeView;
@@ -57,6 +60,7 @@ namespace EducationalPlatformDesktop.ViewModels
                     OnPropertyChanged(nameof(IsHomeVisible));
                     OnPropertyChanged(nameof(IsCoursesVisible));
                     OnPropertyChanged(nameof(IsProfileVisible));
+                    OnPropertyChanged(nameof(IsLessonVisible));
                 }
             }
         }
@@ -90,12 +94,19 @@ namespace EducationalPlatformDesktop.ViewModels
         public bool IsHomeVisible => CurrentView == _homeView;
         public bool IsCoursesVisible => CurrentView == _coursesView;
         public bool IsProfileVisible => CurrentView == _profileView;
+        public bool IsLessonVisible => CurrentView == _lessonView;
 
         public UserProfile Profile { get; }
 
         public ObservableCollection<Course> Courses { get; }
+        public ObservableCollection<Progress> ProgressItems { get; }
+        public ObservableCollection<Certificate> Certificates { get; }
         public ObservableCollection<Module> Modules { get; } = new();
         public ObservableCollection<Lesson> Lessons { get; } = new();
+
+        public int ActiveCoursesCount => Courses.Count(course => course.Progress > 0 && course.Progress < 100);
+        public int LessonsCompletedCount => Courses.Sum(course => course.CompletedLessons);
+        public int CertificatesCount => Certificates.Count;
 
         public Course? SelectedCourse
         {
@@ -156,6 +167,7 @@ namespace EducationalPlatformDesktop.ViewModels
         public RelayCommand ShowCoursesCommand { get; }
         public RelayCommand ShowProfileCommand { get; }
         public RelayCommand OpenLessonCommand { get; }
+        public RelayCommand BackToCoursesCommand { get; }
         public RelayCommand ExitCommand { get; }
 
         private void ShowHome()
