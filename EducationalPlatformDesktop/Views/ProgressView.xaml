@@ -52,7 +52,7 @@
                                                Foreground="{StaticResource TextMutedBrush}"
                                                FontSize="12" Margin="0,5,0,14" />
                                     <ProgressBar Height="8" Maximum="100"
-                                                 Value="{Binding LessonsPercentage, Mode=OneWay}"
+                                                 Value="{Binding OverallPercentage, Mode=OneWay}"
                                                  Foreground="{StaticResource AccentBrush}"
                                                  Background="{StaticResource SecondaryBackgroundBrush}" />
                                     <TextBlock Foreground="{StaticResource TextSecondaryBrush}"

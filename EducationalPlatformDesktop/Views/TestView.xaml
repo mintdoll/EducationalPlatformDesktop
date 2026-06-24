@@ -124,7 +124,7 @@
                                                    Foreground="{StaticResource AccentBrush}"
                                                    VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1"
-                                                   Text="{Binding}"
+                                                   Text="{Binding Text}"
                                                    FontSize="15"
                                                    Foreground="{StaticResource TextPrimaryBrush}"
                                                    TextWrapping="Wrap"
