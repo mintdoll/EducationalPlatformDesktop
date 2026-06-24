@@ -68,17 +68,20 @@ namespace EducationalPlatformDesktop.Mocks
         public static ObservableCollection<Certificate> GetCertificates()
         {
             return new ObservableCollection<Certificate>
-            {
-                new Certificate
-                {
-                    CourseName = "Бухгалтерский учёт",
-                    StudentName = "Арина Бутакова",
-                    IssuedDate = "16.06.2026",
-                    Score = 85
-                }
-            };
+    {
+        new Certificate
+        {
+            Id = "certificate-accounting-demo",
+            Number = "CERT-20260616-ACC001",
+            CourseId = 2,
+            CourseName = "Бухгалтерский учёт",
+            StudentName = "Арина Бутакова",
+            IssuedAt = new DateTime(2026, 6, 16),
+            Score = 85,
+            TestResultId = "demo-accounting-result"
         }
-
+    };
+        }
         private static Test CreatePythonTest()
         {
             const int testId = 101;
