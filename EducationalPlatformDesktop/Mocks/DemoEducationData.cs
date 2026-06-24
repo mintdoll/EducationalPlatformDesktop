@@ -22,6 +22,7 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 new Course
                 {
+                    Id = 1,
                     Title = "Python для начинающих",
                     Track = "IT",
                     Teacher = "Петров П.П.",
@@ -109,6 +110,7 @@ namespace EducationalPlatformDesktop.Mocks
                 },
                 new Course
                 {
+                    Id = 2,
                     Title = "Бухгалтерский учёт",
                     Track = "Бухгалтерия",
                     Teacher = "Иванова А.С.",
@@ -187,6 +189,7 @@ namespace EducationalPlatformDesktop.Mocks
                 },
                 new Course
                 {
+                    Id = 3,
                     Title = "Логистика и закупки",
                     Track = "Логистика",
                     Teacher = "Кузнецов Д.В.",

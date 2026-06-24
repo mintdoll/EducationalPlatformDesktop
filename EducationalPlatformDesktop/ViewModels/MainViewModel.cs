@@ -243,8 +243,14 @@ namespace EducationalPlatformDesktop.ViewModels
 
         private void OpenTest()
         {
-            var courseName = SelectedCourse?.Title ?? "Курс";
-            _testViewModel = new TestViewModel(MockTestData.GetTest(courseName));
+            if (SelectedCourse == null)
+            {
+                return;
+            }
+
+            var test = MockTestData.GetTestForCourse(SelectedCourse.Id);
+
+            _testViewModel = new TestViewModel(test);
             _testViewModel.TestCompleted += OnTestCompleted;
             _testViewModel.BackRequested += ShowCourses;
             _testView.DataContext = _testViewModel;
