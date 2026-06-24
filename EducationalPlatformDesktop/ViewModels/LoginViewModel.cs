@@ -1,25 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Controls;
+using EducationalPlatformDesktop.Api;
+using EducationalPlatformDesktop.Api.Contracts;
+using EducationalPlatformDesktop.Api.Services;
 using EducationalPlatformDesktop.Commands;
 
 namespace EducationalPlatformDesktop.ViewModels
 {
     public class LoginViewModel : ViewModelBase
     {
+        private readonly OnlineSchoolApiClient _apiClient;
+
+        private string _login = string.Empty;
+        private string _password = string.Empty;
+        private string _errorMessage = string.Empty;
+        private string _successMessage = string.Empty;
+        private bool _isBusy;
+
+        // Локальный fallback оставляем только на случай, если API временно недоступен.
         private static readonly Dictionary<string, string> DemoAccounts = new(StringComparer.OrdinalIgnoreCase)
         {
             { "arina@mail", "1234" },
             { "student@mail", "1234" },
             { "demo@mail", "demo123" }
         };
-
-        private string _login = string.Empty;
-        private string _password = string.Empty;
-        private string _errorMessage = string.Empty;
-        private string _successMessage = string.Empty;
-
+        public LoginViewModel()
+        {
+            _apiClient = new OnlineSchoolApiClient(new System.Net.Http.HttpClient());
+            LoginCommand = new RelayCommand(async parameter => await ExecuteLoginAsync(parameter));
+        }
         public string Login
         {
             get => _login;
@@ -32,7 +43,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
             }
         }
-
         public string Password
         {
             get => _password;
@@ -45,7 +55,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
             }
         }
-
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -59,7 +68,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
             }
         }
-
         public string SuccessMessage
         {
             get => _successMessage;
@@ -73,43 +81,87 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
             }
         }
-
         public bool IsErrorVisible => !string.IsNullOrWhiteSpace(ErrorMessage);
         public bool IsSuccessVisible => !string.IsNullOrWhiteSpace(SuccessMessage);
-
-        public RelayCommand LoginCommand { get; }
-
-        public event Action? LoginSucceeded;
-
-        public LoginViewModel()
+        public bool IsBusy
         {
-            LoginCommand = new RelayCommand(ExecuteLogin);
+            get => _isBusy;
+            set
+            {
+                if (_isBusy != value)
+                {
+                    _isBusy = value;
+                    OnPropertyChanged();
+                }
+            }
         }
-
-        private void ExecuteLogin(object? parameter)
+        public RelayCommand LoginCommand { get; }
+        public event Action? LoginSucceeded;
+        private async Task ExecuteLoginAsync(object? parameter)
         {
+            if (IsBusy)
+            {
+                return;
+            }
+
             var passwordBox = parameter as PasswordBox;
             Password = passwordBox?.Password ?? string.Empty;
 
-            var login = Login.Trim();
+            var email = Login.Trim();
 
-            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(Password))
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(Password))
             {
-                ErrorMessage = "Введите логин и пароль.";
+                ErrorMessage = "Введите email и пароль.";
                 SuccessMessage = string.Empty;
                 return;
             }
-
-            if (!DemoAccounts.TryGetValue(login, out var expectedPassword) || expectedPassword != Password)
-            {
-                ErrorMessage = "Неверный логин или пароль.";
-                SuccessMessage = string.Empty;
-                return;
-            }
-
+            IsBusy = true;
             ErrorMessage = string.Empty;
-            SuccessMessage = $"Вход выполнен успешно. Добро пожаловать, {login}.";
-            LoginSucceeded?.Invoke();
+            SuccessMessage = string.Empty;
+            try
+            {
+                var response = await _apiClient.LoginAsync(new LoginRequestDto
+                {
+                    Email = email,
+                    Password = Password
+                });
+
+                if (response != null)
+                {
+                    AppSession.UserId = response.UserId;
+                    AppSession.Role = response.Role;
+                    AppSession.Email = email;
+                    AppSession.Token = response.Token;
+
+                    _apiClient.SetBearerToken(response.Token);
+
+                    SuccessMessage = "Вход выполнен успешно.";
+                    LoginSucceeded?.Invoke();
+                    return;
+                }
+                ErrorMessage = "Неверный email или пароль.";
+                return;
+            }
+            catch
+            {
+                // Если backend временно недоступен, можно войти в демо-режиме.
+                if (!DemoAccounts.TryGetValue(email, out var expectedPassword) || expectedPassword != Password)
+                {
+                    ErrorMessage = "Не удалось подключиться к API, и локальная проверка не прошла.";
+                    return;
+                }
+                AppSession.UserId = 1;
+                AppSession.Role = "student";
+                AppSession.Email = email;
+                AppSession.Token = null;
+
+                SuccessMessage = "Вход выполнен успешно в демо-режиме.";
+                LoginSucceeded?.Invoke();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 }
