@@ -28,14 +28,34 @@
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" />
 
-                    <Button Grid.Column="2"
-                            Content="Перейти к тесту →"
-                            Width="170" Height="36"
-                            Command="{Binding OpenTestCommand}"
-                            Background="{StaticResource AccentBrush}"
-                            Foreground="White"
-                            BorderBrush="{StaticResource AccentBorderBrush}"
-                            BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" />
+                    <StackPanel Grid.Column="2"
+            Orientation="Horizontal">
+
+                        <Button Content="{Binding SelectedLesson.CompletionButtonText}"
+            Command="{Binding CompleteLessonCommand}"
+            CommandParameter="{Binding SelectedLesson}"
+            IsEnabled="{Binding SelectedLesson.CanBeCompleted}"
+            Width="175"
+            Height="36"
+            Margin="0,0,10,0"
+            Background="{StaticResource SecondaryBackgroundBrush}"
+            Foreground="{StaticResource TextPrimaryBrush}"
+            BorderBrush="{StaticResource CardBorderBrush}"
+            BorderThickness="1"
+            FontWeight="SemiBold"
+            Cursor="Hand" />
+
+                        <Button Content="Перейти к тесту →"
+            Command="{Binding OpenTestCommand}"
+            Width="170"
+            Height="36"
+            Background="{StaticResource AccentBrush}"
+            Foreground="White"
+            BorderBrush="{StaticResource AccentBorderBrush}"
+            BorderThickness="1"
+            FontWeight="SemiBold"
+            Cursor="Hand" />
+                    </StackPanel>
                 </Grid>
 
                 <StackPanel>

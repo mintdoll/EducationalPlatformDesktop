@@ -175,6 +175,29 @@
                                                Foreground="{StaticResource TextSecondaryBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,8,0,0" />
+                                    <Grid Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="{Binding Status}"
+               FontSize="12"
+               FontWeight="SemiBold"
+               Foreground="{StaticResource AccentBrush}" />
+
+                                        <TextBlock Grid.Column="1"
+               Text="{Binding Progress, StringFormat={}{0}%}"
+               FontSize="12"
+               Foreground="{StaticResource TextSecondaryBrush}" />
+                                    </Grid>
+
+                                    <ProgressBar Height="6"
+             Margin="0,8,0,0"
+             Maximum="100"
+             Value="{Binding Progress, Mode=OneWay}"
+             Foreground="{StaticResource AccentBrush}"
+             Background="{StaticResource SecondaryBackgroundBrush}" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
@@ -287,6 +310,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Text="{Binding Title}"
@@ -295,8 +319,13 @@
                                                        Foreground="{StaticResource TextPrimaryBrush}"
                                                        TextWrapping="Wrap"
                                                        VerticalAlignment="Center" />
-
                                             <TextBlock Grid.Column="1"
+                                                       Text="{Binding CompletionStatus}"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource AccentBrush}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="12,0,0,0" />
+                                            <TextBlock Grid.Column="2"
                                                        Text="{Binding DurationMinutes, StringFormat={}{0} мин}"
                                                        FontSize="13"
                                                        Foreground="{StaticResource TextMutedBrush}"
