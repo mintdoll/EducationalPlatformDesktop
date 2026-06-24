@@ -58,6 +58,10 @@
                                 Command="{Binding ShowCoursesCommand}"
                                 Style="{StaticResource CoursesSidebarButtonStyle}" />
 
+                        <Button Content="Прогресс"
+                                Command="{Binding ShowProgressCommand}"
+                                Style="{StaticResource ProgressSidebarButtonStyle}" />
+
                         <Button Content="Профиль"
                                 Command="{Binding ShowProfileCommand}"
                                 Style="{StaticResource ProfileSidebarButtonStyle}" />

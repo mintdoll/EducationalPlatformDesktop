@@ -13,18 +13,30 @@
                 CornerRadius="20"
                 Padding="24">
             <DockPanel LastChildFill="True">
-                <Button Content="← К курсам"
-                        DockPanel.Dock="Top"
-                        Width="110"
-                        Height="36"
-                        Margin="0,0,0,16"
-                        Command="{Binding BackToCoursesCommand}"
-                        Background="{StaticResource AccentBrush}"
-                        Foreground="White"
-                        BorderBrush="{StaticResource AccentBorderBrush}"
-                        BorderThickness="1"
-                        FontWeight="SemiBold"
-                        Cursor="Hand" />
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Content="← К курсам"
+                            Width="110" Height="36"
+                            Command="{Binding BackToCoursesCommand}"
+                            Background="{StaticResource SecondaryBackgroundBrush}"
+                            Foreground="{StaticResource TextPrimaryBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" />
+
+                    <Button Grid.Column="2"
+                            Content="Перейти к тесту →"
+                            Width="170" Height="36"
+                            Command="{Binding OpenTestCommand}"
+                            Background="{StaticResource AccentBrush}"
+                            Foreground="White"
+                            BorderBrush="{StaticResource AccentBorderBrush}"
+                            BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" />
+                </Grid>
 
                 <StackPanel>
                     <TextBlock Text="{Binding SelectedLesson.Title}"

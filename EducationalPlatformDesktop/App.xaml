@@ -5,10 +5,14 @@
              StartupUri="Views/LoginWindow.xaml">
     <Application.Resources>
 
+        
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
         <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <conv:EqualConverter x:Key="EqualConverter"/>
+        <conv:ProgressConverter x:Key="ProgressConverter"/>
+        <conv:IsGreaterThanMinusOneConverter x:Key="IsGreaterThanMinusOneConverter"/>
 
-
+        
         <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1A1A2E" />
         <SolidColorBrush x:Key="PageBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
@@ -20,9 +24,8 @@
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="#666666" />
         <SolidColorBrush x:Key="TextMutedBrush" Color="#8A8A8A" />
         <SolidColorBrush x:Key="SidebarTextBrush" Color="#CFCFE6" />
-        
-        
 
+        
         <Style x:Key="SidebarButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="44" />
             <Setter Property="Margin" Value="0,0,0,8" />
@@ -89,6 +92,17 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="ProgressSidebarButtonStyle" TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsProgressVisible}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBorderBrush}" />
+                    <Setter Property="Foreground" Value="White" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        
         <Style x:Key="MetricCardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}" />
             <Setter Property="CornerRadius" Value="14" />

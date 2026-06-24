@@ -5,11 +5,11 @@ namespace EducationalPlatformDesktop.Mocks
 {
     public static class MockTestData
     {
-        public static Test GetTest()
+        public static Test GetTest(string courseName = "Python для начинающих")
         {
             return new Test
             {
-                Title = "Тест: Основы программирования",
+                Title = $"Итоговый тест · {courseName}",
                 Questions = new ObservableCollection<Question>
                 {
                     new Question
@@ -26,10 +26,10 @@ namespace EducationalPlatformDesktop.Mocks
                     },
                     new Question
                     {
-                        Text = "Какой тип данных хранит целые числа в C#?",
+                        Text = "Какой тип данных хранит целые числа в Python?",
                         Options = new ObservableCollection<string>
                         {
-                            "string", "bool", "int", "double"
+                            "str", "bool", "int", "float"
                         },
                         CorrectIndex = 2
                     },
@@ -55,7 +55,7 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 new Progress
                 {
-                    CourseName = "Основы программирования",
+                    CourseName = "Python для начинающих",
                     CompletedLessons = 4,
                     TotalLessons = 4,
                     TestScore = 85,
@@ -63,7 +63,7 @@ namespace EducationalPlatformDesktop.Mocks
                 },
                 new Progress
                 {
-                    CourseName = "WPF и MVVM",
+                    CourseName = "Бухгалтерский учёт",
                     CompletedLessons = 2,
                     TotalLessons = 4,
                     TestScore = 0,
@@ -78,7 +78,7 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 new Certificate
                 {
-                    CourseName = "Основы программирования",
+                    CourseName = "Python для начинающих",
                     StudentName = "Арина Бутакова",
                     IssuedDate = "16.06.2026",
                     Score = 85
