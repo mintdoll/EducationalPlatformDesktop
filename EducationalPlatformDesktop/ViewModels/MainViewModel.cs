@@ -18,8 +18,13 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly LessonView _lessonView = new();
         private readonly ProgressView _progressView = new();
         private readonly TestView _testView = new();
+        private readonly TestResultView _testResultView = new();
+        private readonly CertificateView _certificateView = new();
         private TestViewModel? _testViewModel;
+        private TestResultViewModel? _testResultViewModel;
+        private readonly CertificateViewModel _certificateViewModel;
         private int? _activeTestCourseId;
+        
 
         private object _currentView = null!;
         private string _pageTitle = "Главная";
@@ -47,7 +52,7 @@ namespace EducationalPlatformDesktop.ViewModels
         public RelayCommand OpenTestCommand { get; }
         public RelayCommand BackToCoursesCommand { get; }
         public RelayCommand ExitCommand { get; }
-
+        public RelayCommand ShowCertificatesCommand { get; }
 
         public object CurrentView
         {
@@ -64,6 +69,8 @@ namespace EducationalPlatformDesktop.ViewModels
                     OnPropertyChanged(nameof(IsProgressVisible));
                     OnPropertyChanged(nameof(IsLessonVisible));
                     OnPropertyChanged(nameof(IsTestVisible));
+                    OnPropertyChanged(nameof(IsTestResultVisible));
+                    OnPropertyChanged(nameof(IsCertificatesVisible));
                 }
             }
         }
@@ -102,7 +109,8 @@ namespace EducationalPlatformDesktop.ViewModels
         public bool IsProgressVisible => CurrentView == _progressView;
         public bool IsLessonVisible => CurrentView == _lessonView;
         public bool IsTestVisible => CurrentView == _testView;
-
+        public bool IsTestResultVisible => CurrentView == _testResultView;
+        public bool IsCertificatesVisible => CurrentView == _certificateView;
 
         public int ActiveCoursesCount => Courses.Count(course => course.Progress > 0 && course.Progress < 100);
         public int LessonsCompletedCount => Courses.Sum(course => course.CompletedLessons);
@@ -180,14 +188,19 @@ namespace EducationalPlatformDesktop.ViewModels
             ProgressItems = new ObservableCollection<Progress>(
     Courses.Select(CreateProgressItem));
             Certificates = MockTestData.GetCertificates();
+            _certificateViewModel = new CertificateViewModel(Certificates);
+
+            _certificateView.DataContext =
+                _certificateViewModel;
 
             // Инициализация команд
             ShowHomeCommand = new RelayCommand(_ => ShowHome());
             ShowCoursesCommand = new RelayCommand(_ => ShowCourses());
             ShowProfileCommand = new RelayCommand(_ => ShowProfile());
             ShowProgressCommand = new RelayCommand(_ => ShowProgress());
-            OpenLessonCommand =
-    new RelayCommand(param => OpenLesson(param as Lesson));
+          
+            OpenLessonCommand = new RelayCommand(param => OpenLesson(param as Lesson));
+            ShowCertificatesCommand = new RelayCommand(_ => ShowCertificates());
 
             CompleteLessonCommand =
                 new RelayCommand(param => CompleteLesson(param as Lesson));
@@ -235,7 +248,13 @@ namespace EducationalPlatformDesktop.ViewModels
             PageTitle = "Прогресс";
             PageDescription = "Отслеживайте ваш прогресс по всем курсам.";
         }
-
+        private void ShowCertificates()
+        {
+            CurrentView = _certificateView;
+            PageTitle = "Сертификаты";
+            PageDescription =
+                "Просмотр сертификатов за завершённые курсы.";
+        }
         private void OpenLesson(Lesson? lesson)
         {
             if (lesson == null)
@@ -263,7 +282,9 @@ namespace EducationalPlatformDesktop.ViewModels
 
             _testViewModel = new TestViewModel(test);
             _testViewModel.TestCompleted += OnTestCompleted;
+
             _testViewModel.BackRequested += ShowCourses;
+
 
             _testView.DataContext = _testViewModel;
 
@@ -272,27 +293,37 @@ namespace EducationalPlatformDesktop.ViewModels
             PageDescription =
                 "Выберите один ответ. Можно использовать клавиши 1–4 и Enter.";
         }
-        private void OnTestCompleted(int scorePercent)
+        private void OnTestCompleted(TestResult result)
         {
-            if (_activeTestCourseId == null)
-            {
-                return;
-            }
-
             var course = Courses.FirstOrDefault(
-                item => item.Id == _activeTestCourseId.Value);
+                item => item.Id == result.CourseId);
 
             if (course == null)
             {
                 return;
             }
 
-            course.ApplyTestResult(scorePercent);
+            result.CourseName = course.Title;
+
+            course.ApplyTestResult(result.ScorePercent);
 
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
-        }
+            GenerateCertificateIfEligible(course, result);
 
+            _testResultViewModel = new TestResultViewModel(
+                result,
+                course.CanReceiveCertificate);
+
+            _testResultViewModel.RetryRequested += RetryCurrentTest;
+            _testResultViewModel.BackToCoursesRequested += ShowCourses;
+
+            _testResultView.DataContext = _testResultViewModel;
+
+            CurrentView = _testResultView;
+            PageTitle = "Результат теста";
+            PageDescription = course.Title;
+        }
 
         private void UpdateModulesForSelectedCourse()
         {
@@ -394,6 +425,54 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(LessonsCompletedCount));
             OnPropertyChanged(nameof(CompletedCoursesCount));
             OnPropertyChanged(nameof(AverageProgress));
+        }
+        private void RetryCurrentTest()
+        {
+            if (_activeTestCourseId == null)
+            {
+                return;
+            }
+
+            SelectedCourse = Courses.FirstOrDefault(
+                course => course.Id == _activeTestCourseId.Value);
+
+            OpenTest();
+        }
+        private void GenerateCertificateIfEligible(
+    Course course,
+    TestResult result)
+        {
+            if (!course.CanReceiveCertificate ||
+                !result.IsPassed)
+            {
+                return;
+            }
+
+            var alreadyExists = Certificates.Any(
+                certificate => certificate.CourseId == course.Id);
+
+            if (alreadyExists)
+            {
+                return;
+            }
+
+            var certificate = new Certificate
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Number =
+                    $"CERT-{DateTime.Now:yyyyMMdd}-" +
+                    $"{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+                CourseId = course.Id,
+                CourseName = course.Title,
+                StudentName = Profile.FullName,
+                IssuedAt = DateTime.Now,
+                Score = result.ScorePercent,
+                TestResultId = result.AttemptId
+            };
+
+            Certificates.Add(certificate);
+
+            OnPropertyChanged(nameof(CertificatesCount));
         }
     }
     

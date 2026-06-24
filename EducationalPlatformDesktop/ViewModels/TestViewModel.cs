@@ -57,15 +57,6 @@ namespace EducationalPlatformDesktop.ViewModels
 
         public bool IsPassed => ScorePercent >= _test.PassingScore;
 
-        public string ResultTitle => IsPassed
-            ? "Тест пройден"
-            : "Попробуйте ещё раз";
-
-        public string ResultDescription => IsPassed
-            ? "Отличная работа — результат сохранён в разделе «Прогресс»."
-            : $"Для зачёта нужно набрать не менее {_test.PassingScore}%. " +
-              "Повторите материал и пройдите тест снова.";
-
         public int SelectedOption
         {
             get => _selectedOption;
@@ -106,7 +97,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
         public RelayCommand BackCommand { get; }
 
-        public event Action<int>? TestCompleted;
+        public event Action<TestResult>? TestCompleted;
 
         public event Action? BackRequested;
 
@@ -122,7 +113,8 @@ namespace EducationalPlatformDesktop.ViewModels
 
         private void Answer()
         {
-            var selectedAnswer = CurrentQuestion.Options[SelectedOption];
+            var selectedAnswer =
+                CurrentQuestion.Options[SelectedOption];
 
             if (selectedAnswer.IsCorrect)
             {
@@ -143,13 +135,21 @@ namespace EducationalPlatformDesktop.ViewModels
 
             IsFinished = true;
 
-            OnPropertyChanged(nameof(CorrectAnswers));
-            OnPropertyChanged(nameof(ScorePercent));
-            OnPropertyChanged(nameof(IsPassed));
-            OnPropertyChanged(nameof(ResultTitle));
-            OnPropertyChanged(nameof(ResultDescription));
+            var result = new TestResult
+            {
+                AttemptId = Guid.NewGuid().ToString("N"),
+                CourseId = _test.CourseId,
+                TestId = _test.Id,
+                TestTitle = _test.Title,
+                CorrectAnswers = CorrectAnswers,
+                TotalQuestions = TotalQuestions,
+                ScorePercent = ScorePercent,
+                PassingScore = _test.PassingScore,
+                IsPassed = IsPassed,
+                CompletedAt = DateTime.Now
+            };
 
-            TestCompleted?.Invoke(ScorePercent);
+            TestCompleted?.Invoke(result);
         }
 
         private void Restart()
@@ -165,8 +165,6 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(CorrectAnswers));
             OnPropertyChanged(nameof(ScorePercent));
             OnPropertyChanged(nameof(IsPassed));
-            OnPropertyChanged(nameof(ResultTitle));
-            OnPropertyChanged(nameof(ResultDescription));
         }
     }
 }
