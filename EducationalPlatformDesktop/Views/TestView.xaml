@@ -53,10 +53,12 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24">
         <Border MaxWidth="900"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Stretch"
+                VerticalAlignment="Top"
                 Background="{StaticResource CardBackgroundBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="1"
@@ -144,6 +146,8 @@
                     <TextBlock Text="Клавиши 1–4 — выбрать · Enter — ответить"
                                Foreground="{StaticResource TextMutedBrush}"
                                FontSize="12"
+                               TextWrapping="Wrap"
+                               Margin="0,0,16,0"
                                VerticalAlignment="Center" />
                     <Button Grid.Column="1"
                             Content="Ответить"
@@ -177,6 +181,8 @@
                            FontSize="28"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
                            Margin="0,18,0,8" />
                 <TextBlock HorizontalAlignment="Center"
                            Foreground="{StaticResource AccentBrush}"
@@ -215,4 +221,5 @@
             </Grid>
         </Border>
     </Grid>
+    </ScrollViewer>
 </UserControl>

@@ -8,6 +8,11 @@ using EducationalPlatformDesktop.Views;
 using EducationalPlatformDesktop.Views.Sections;
 using System.Collections.Generic;
 using EducationalPlatformDesktop.Services;
+using System.Net.Http;
+using System.Threading.Tasks;
+using EducationalPlatformDesktop.Api;
+using EducationalPlatformDesktop.Api.Services;
+using EducationalPlatformDesktop.Api.Contracts;
 
 namespace EducationalPlatformDesktop.ViewModels
 {
@@ -23,6 +28,7 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly TestResultView _testResultView = new();
         private readonly CertificateView _certificateView = new();
         private readonly DemoStateStorage _stateStorage = new();
+        private readonly OnlineSchoolApiClient _apiClient = new(new HttpClient());
 
         private TestViewModel? _testViewModel;
         private TestResultViewModel? _testResultViewModel;
@@ -37,6 +43,8 @@ namespace EducationalPlatformDesktop.ViewModels
         private Module? _selectedModule;
         private Lesson? _selectedLesson;
         private string _lessonContent = "Выберите урок, чтобы увидеть текст лекции.";
+        private string _apiStatusMessage = string.Empty;
+        private bool _hasApiStatusMessage;
 
 
         public UserProfile Profile { get; }
@@ -210,7 +218,31 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
             }
         }
+        public string ApiStatusMessage
+        {
+            get => _apiStatusMessage;
+            set
+            {
+                if (_apiStatusMessage != value)
+                {
+                    _apiStatusMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
+        public bool HasApiStatusMessage
+        {
+            get => _hasApiStatusMessage;
+            set
+            {
+                if (_hasApiStatusMessage != value)
+                {
+                    _hasApiStatusMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public event Action? RequestClose;
 
@@ -221,6 +253,7 @@ namespace EducationalPlatformDesktop.ViewModels
             Profile = DemoEducationData.GetProfile();
             Courses = MockCourseData.GetCourses();
             Certificates = MockTestData.GetCertificates();
+            _apiClient.SetBearerToken(AppSession.Token);
 
             ApplySavedState();
 
@@ -259,6 +292,7 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 SelectedCourse = Courses.First();
             }
+            _ = LoadUserProgressFromApiAsync();
         }
 
 
@@ -338,7 +372,7 @@ namespace EducationalPlatformDesktop.ViewModels
             PageDescription =
                 "Выберите один ответ. Можно использовать клавиши 1–4 и Enter.";
         }
-        private void OnTestCompleted(TestResult result)
+        private async void OnTestCompleted(TestResult result)
         {
             var course = Courses.FirstOrDefault(
                 item => item.Id == result.CourseId);
@@ -350,11 +384,19 @@ namespace EducationalPlatformDesktop.ViewModels
 
             result.CourseName = course.Title;
 
+            var apiScore = await FinishTestOnApiAsync(course.Id);
+
+            if (apiScore != null)
+            {
+                result.ScorePercent = apiScore.Value;
+                result.IsPassed = result.ScorePercent >= result.PassingScore;
+            }
+
             course.ApplyTestResult(result.ScorePercent);
 
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
-            GenerateCertificateIfEligible(course, result);
+            await GenerateCertificateIfEligibleAsync(course, result);
             SaveDemoState();
 
             _testResultViewModel = new TestResultViewModel(
@@ -495,6 +537,139 @@ namespace EducationalPlatformDesktop.ViewModels
 
             OpenTest();
         }
+        private async Task LoadUserProgressFromApiAsync()
+        {
+            if (AppSession.UserId == null ||
+                string.IsNullOrWhiteSpace(AppSession.Token))
+            {
+                ApiStatusMessage =
+                    "API-режим недоступен: пользователь не авторизован. Используются демонстрационные данные.";
+                HasApiStatusMessage = true;
+                return;
+            }
+
+            try
+            {
+                var result = await _apiClient.GetUserCoursesAsync(
+                    AppSession.UserId.Value);
+
+                if (!result.IsSuccess)
+                {
+                    ApiStatusMessage = result.Message;
+                    HasApiStatusMessage = true;
+                    return;
+                }
+
+                if (result.Data == null || result.Data.Count == 0)
+                {
+                    Courses.Clear();
+                    ProgressItems.Clear();
+                    Modules.Clear();
+                    Lessons.Clear();
+
+                    SelectedCourse = null;
+                    SelectedModule = null;
+                    SelectedLesson = null;
+
+                    ApiStatusMessage =
+                        "У вас пока нет приобретённых курсов. После покупки или назначения курса он появится в этом разделе.";
+                    HasApiStatusMessage = true;
+
+                    NotifyProgressSummaryChanged();
+                    return;
+                }
+
+                ApiStatusMessage = string.Empty;
+                HasApiStatusMessage = false;
+
+                foreach (var userCourse in result.Data)
+                {
+                    var course = Courses.FirstOrDefault(
+                        item => item.Id == userCourse.CourseId);
+
+                    if (course == null)
+                    {
+                        continue;
+                    }
+
+                    if (userCourse.Completed)
+                    {
+                        foreach (var lesson in course.Modules.SelectMany(module => module.Lessons))
+                        {
+                            lesson.IsCompleted = true;
+                        }
+                    }
+
+                    if (userCourse.Progress > 0 && userCourse.Progress < 100)
+                    {
+                        var allLessons = course.Modules
+                            .SelectMany(module => module.Lessons)
+                            .ToList();
+
+                        var lessonsToComplete = (int)Math.Round(
+                            allLessons.Count * userCourse.Progress / 100.0);
+
+                        foreach (var lesson in allLessons.Take(lessonsToComplete))
+                        {
+                            lesson.IsCompleted = true;
+                        }
+                    }
+
+                    course.RefreshProgress();
+                    UpdateProgressForCourse(course);
+                }
+
+                NotifyProgressSummaryChanged();
+                SaveDemoState();
+            }
+            catch
+            {
+                ApiStatusMessage =
+                    "Не удалось подключиться к API. Сейчас используются демонстрационные данные.";
+                HasApiStatusMessage = true;
+            }
+        }
+
+        private async Task<int?> FinishTestOnApiAsync(int courseId)
+        {
+            if (AppSession.UserId == null ||
+                string.IsNullOrWhiteSpace(AppSession.Token))
+            {
+                ApiStatusMessage =
+                    "Тест завершён локально. Для отправки результата на сервер нужно войти в систему.";
+                HasApiStatusMessage = true;
+                return null;
+            }
+
+            try
+            {
+                var result = await _apiClient.FinishTestAsync(
+                    new EducationalPlatformDesktop.Api.Contracts.TestFinishRequestDto
+                    {
+                        UserId = AppSession.UserId.Value,
+                        CourseId = courseId
+                    });
+
+                if (!result.IsSuccess)
+                {
+                    ApiStatusMessage = result.Message;
+                    HasApiStatusMessage = true;
+                    return null;
+                }
+
+                ApiStatusMessage = string.Empty;
+                HasApiStatusMessage = false;
+
+                return result.Data?.Score;
+            }
+            catch
+            {
+                ApiStatusMessage =
+                    "Не удалось отправить результат теста на сервер. Показан локальный результат.";
+                HasApiStatusMessage = true;
+                return null;
+            }
+        }
         private void ApplySavedState()
         {
             var state = _stateStorage.Load();
@@ -568,9 +743,9 @@ namespace EducationalPlatformDesktop.ViewModels
             _stateStorage.Save(state);
         }
 
-        private void GenerateCertificateIfEligible(
-    Course course,
-    TestResult result)
+        private async Task GenerateCertificateIfEligibleAsync(
+     Course course,
+     TestResult result)
         {
             if (!course.CanReceiveCertificate ||
                 !result.IsPassed)
@@ -586,7 +761,21 @@ namespace EducationalPlatformDesktop.ViewModels
                 return;
             }
 
-            var certificate = new Certificate
+            var certificateFromApi =
+                await TryGetCertificateFromApiAsync(course.Id, result);
+
+            if (certificateFromApi != null)
+            {
+                Certificates.Add(certificateFromApi);
+
+                OnPropertyChanged(nameof(CertificatesCount));
+                OnPropertyChanged(nameof(HasCertificates));
+                OnPropertyChanged(nameof(IsCertificatesEmpty));
+
+                return;
+            }
+
+            var localCertificate = new Certificate
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Number =
@@ -594,17 +783,77 @@ namespace EducationalPlatformDesktop.ViewModels
                     $"{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
                 CourseId = course.Id,
                 CourseName = course.Title,
-                StudentName = Profile.FullName,
+                StudentName = !string.IsNullOrWhiteSpace(AppSession.FullName)
+                    ? AppSession.FullName
+                    : Profile.FullName,
                 IssuedAt = DateTime.Now,
                 Score = result.ScorePercent,
                 TestResultId = result.AttemptId
             };
 
-            Certificates.Add(certificate);
+            Certificates.Add(localCertificate);
 
             OnPropertyChanged(nameof(CertificatesCount));
             OnPropertyChanged(nameof(HasCertificates));
             OnPropertyChanged(nameof(IsCertificatesEmpty));
+        }
+
+        private async Task<Certificate?> TryGetCertificateFromApiAsync(
+    int courseId,
+    TestResult result)
+        {
+            if (AppSession.UserId == null ||
+                string.IsNullOrWhiteSpace(AppSession.Token))
+            {
+                ApiStatusMessage =
+                    "Сертификат создан локально. Для получения серверного сертификата нужно войти в систему.";
+                HasApiStatusMessage = true;
+                return null;
+            }
+
+            try
+            {
+                var response = await _apiClient.GetCertificateAsync(
+                    AppSession.UserId.Value,
+                    courseId);
+
+                if (!response.IsSuccess)
+                {
+                    ApiStatusMessage = response.Message;
+                    HasApiStatusMessage = true;
+                    return null;
+                }
+
+                if (response.Data == null)
+                {
+                    ApiStatusMessage =
+                        "Сервер не вернул данные сертификата. Создан локальный демонстрационный сертификат.";
+                    HasApiStatusMessage = true;
+                    return null;
+                }
+
+                ApiStatusMessage = string.Empty;
+                HasApiStatusMessage = false;
+
+                return new Certificate
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Number = response.Data.CertificateNumber,
+                    CourseId = courseId,
+                    CourseName = response.Data.CourseName,
+                    StudentName = response.Data.FullName,
+                    IssuedAt = response.Data.IssueDate,
+                    Score = result.ScorePercent,
+                    TestResultId = result.AttemptId
+                };
+            }
+            catch
+            {
+                ApiStatusMessage =
+                    "Не удалось получить сертификат с сервера. Создан локальный демонстрационный сертификат.";
+                HasApiStatusMessage = true;
+                return null;
+            }
         }
     }
     
