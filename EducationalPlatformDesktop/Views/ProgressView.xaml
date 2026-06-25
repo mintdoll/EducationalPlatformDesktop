@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource PageBackgroundBrush}">
+    
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="24">
@@ -28,11 +29,49 @@
                 </Border>
             </UniformGrid>
 
+            <Border Visibility="{Binding HasApiStatusMessage, Converter={StaticResource BoolToVis}}"
+        Background="#FFF7ED"
+        BorderBrush="#FDBA74"
+        BorderThickness="1"
+        CornerRadius="12"
+        Padding="14"
+        Margin="0,0,0,16">
+                <TextBlock Text="{Binding ApiStatusMessage}"
+               Foreground="#9A3412"
+               FontSize="14"
+               TextWrapping="Wrap" />
+            </Border>
+
+            <Border Visibility="{Binding IsProgressEmpty, Converter={StaticResource BoolToVis}}"
+        Background="#F9FAFB"
+        BorderBrush="#E5E7EB"
+        BorderThickness="1"
+        CornerRadius="16"
+        Padding="28"
+        Margin="0,0,0,16">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="Прогресс пока отсутствует"
+                   FontSize="20"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   TextAlignment="Center" />
+
+                    <TextBlock Text="Когда у пользователя появятся доступные курсы или он начнёт обучение, здесь отобразится прогресс."
+                   Margin="0,8,0,0"
+                   FontSize="14"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <TextBlock Text="Прогресс по курсам"
+                       Visibility="{Binding HasProgressItems, Converter={StaticResource BoolToVis}}"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        FontSize="22" FontWeight="SemiBold" Margin="0,0,0,14" />
 
-            <ItemsControl ItemsSource="{Binding ProgressItems}">
+            <ItemsControl ItemsSource="{Binding ProgressItems}"
+                       Visibility="{Binding HasProgressItems, Converter={StaticResource BoolToVis}}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Background="{StaticResource CardBackgroundBrush}"

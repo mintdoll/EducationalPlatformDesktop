@@ -27,7 +27,8 @@
                            Foreground="{StaticResource TextPrimaryBrush}" />
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Certificates}">
+                    <ItemsControl ItemsSource="{Binding Certificates}"
+                                   Visibility="{Binding HasCertificates, Converter={StaticResource BoolToVis}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Command="{Binding DataContext.SelectCertificateCommand,
