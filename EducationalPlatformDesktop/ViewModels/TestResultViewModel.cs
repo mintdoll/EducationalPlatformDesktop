@@ -45,7 +45,7 @@ namespace EducationalPlatformDesktop.ViewModels
             $"{Result.CompletedAt:dd.MM.yyyy HH:mm}";
 
         public string ResultDescription => Result.IsPassed
-            ? "Результат сохранён в демонстрационном прогрессе."
+            ? "Результат сохранён."
             : "Повторите материал и попробуйте пройти тест ещё раз.";
 
         public string CertificateMessage => IsCertificateAvailable
