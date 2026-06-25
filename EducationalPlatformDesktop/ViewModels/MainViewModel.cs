@@ -6,6 +6,8 @@ using EducationalPlatformDesktop.Mocks;
 using EducationalPlatformDesktop.Models;
 using EducationalPlatformDesktop.Views;
 using EducationalPlatformDesktop.Views.Sections;
+using System.Collections.Generic;
+using EducationalPlatformDesktop.Services;
 
 namespace EducationalPlatformDesktop.ViewModels
 {
@@ -20,6 +22,8 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly TestView _testView = new();
         private readonly TestResultView _testResultView = new();
         private readonly CertificateView _certificateView = new();
+        private readonly DemoStateStorage _stateStorage = new();
+
         private TestViewModel? _testViewModel;
         private TestResultViewModel? _testResultViewModel;
         private readonly CertificateViewModel _certificateViewModel;
@@ -116,10 +120,39 @@ namespace EducationalPlatformDesktop.ViewModels
         public int LessonsCompletedCount => Courses.Sum(course => course.CompletedLessons);
         public int CertificatesCount => Certificates.Count;
         public int CompletedCoursesCount => ProgressItems.Count(item => item.IsCompleted);
+
+        public bool HasCourses => Courses.Count > 0;
+
+        public bool HasProgressItems => ProgressItems.Count > 0;
+
+        public bool HasCertificates => Certificates.Count > 0;
+
+        public bool IsCoursesEmpty => !HasCourses;
+
+        public bool IsProgressEmpty => !HasProgressItems;
+
+        public bool IsCertificatesEmpty => !HasCertificates;
         public int AverageProgress => ProgressItems.Count == 0
        ? 0
        : (int)Math.Round(
            ProgressItems.Average(item => item.OverallPercentage));
+        public string TestAvailabilityMessage
+        {
+            get
+            {
+                if (SelectedCourse == null)
+                {
+                    return "Выберите курс, чтобы увидеть доступность теста.";
+                }
+
+                if (SelectedCourse.CanTakeFinalTest)
+                {
+                    return "Итоговый тест доступен.";
+                }
+
+                return "Итоговый тест откроется после прохождения не менее 90% уроков.";
+            }
+        }
 
         public Course? SelectedCourse
         {
@@ -131,6 +164,8 @@ namespace EducationalPlatformDesktop.ViewModels
                     _selectedCourse = value;
                     OnPropertyChanged();
                     UpdateModulesForSelectedCourse();
+                    OpenTestCommand.RaiseCanExecuteChanged();
+                    OnPropertyChanged(nameof(TestAvailabilityMessage));
                 }
             }
         }
@@ -185,11 +220,14 @@ namespace EducationalPlatformDesktop.ViewModels
 
             Profile = DemoEducationData.GetProfile();
             Courses = MockCourseData.GetCourses();
-            ProgressItems = new ObservableCollection<Progress>(
-    Courses.Select(CreateProgressItem));
             Certificates = MockTestData.GetCertificates();
-            _certificateViewModel = new CertificateViewModel(Certificates);
 
+            ApplySavedState();
+
+            ProgressItems = new ObservableCollection<Progress>(
+                Courses.Select(CreateProgressItem));
+
+            _certificateViewModel = new CertificateViewModel(Certificates);
             _certificateView.DataContext =
                 _certificateViewModel;
 
@@ -206,7 +244,10 @@ namespace EducationalPlatformDesktop.ViewModels
                 new RelayCommand(param => CompleteLesson(param as Lesson));
 
             OpenTestCommand =
-                new RelayCommand(_ => OpenTest());
+                new RelayCommand(
+                 _ => OpenTest(),
+                 _ => SelectedCourse?.CanTakeFinalTest == true);
+
             BackToCoursesCommand = new RelayCommand(_ => ShowCourses());
             ExitCommand = new RelayCommand(_ => RequestClose?.Invoke());
 
@@ -275,6 +316,10 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 return;
             }
+            if (!SelectedCourse.CanTakeFinalTest)
+            {
+                return;
+            }
 
             _activeTestCourseId = SelectedCourse.Id;
 
@@ -310,6 +355,7 @@ namespace EducationalPlatformDesktop.ViewModels
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
             GenerateCertificateIfEligible(course, result);
+            SaveDemoState();
 
             _testResultViewModel = new TestResultViewModel(
                 result,
@@ -388,6 +434,9 @@ namespace EducationalPlatformDesktop.ViewModels
 
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
+            OpenTestCommand.RaiseCanExecuteChanged();
+            OnPropertyChanged(nameof(TestAvailabilityMessage));
+            SaveDemoState();
         }
 
         private Progress CreateProgressItem(Course course)
@@ -425,6 +474,14 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(LessonsCompletedCount));
             OnPropertyChanged(nameof(CompletedCoursesCount));
             OnPropertyChanged(nameof(AverageProgress));
+
+            OnPropertyChanged(nameof(HasCourses));
+            OnPropertyChanged(nameof(HasProgressItems));
+            OnPropertyChanged(nameof(HasCertificates));
+
+            OnPropertyChanged(nameof(IsCoursesEmpty));
+            OnPropertyChanged(nameof(IsProgressEmpty));
+            OnPropertyChanged(nameof(IsCertificatesEmpty));
         }
         private void RetryCurrentTest()
         {
@@ -438,6 +495,79 @@ namespace EducationalPlatformDesktop.ViewModels
 
             OpenTest();
         }
+        private void ApplySavedState()
+        {
+            var state = _stateStorage.Load();
+
+            if (state == null)
+            {
+                return;
+            }
+
+            foreach (var courseState in state.CourseProgress)
+            {
+                var course = Courses.FirstOrDefault(
+                    item => item.Id == courseState.CourseId);
+
+                if (course == null)
+                {
+                    continue;
+                }
+
+                course.BestTestScore = courseState.BestTestScore;
+
+                var lessons = course.Modules
+                    .SelectMany(module => module.Lessons);
+
+                foreach (var lesson in lessons)
+                {
+                    lesson.IsCompleted =
+                        courseState.CompletedLessonIds.Contains(lesson.Id);
+                }
+
+                course.RefreshProgress();
+            }
+
+            if (state.Certificates.Count > 0)
+            {
+                Certificates.Clear();
+
+                foreach (var certificate in state.Certificates)
+                {
+                    Certificates.Add(certificate);
+                }
+            }
+        }
+
+
+        private void SaveDemoState()
+        {
+            var state = new DemoAppState();
+
+            foreach (var course in Courses)
+            {
+                var completedLessonIds = course.Modules
+                    .SelectMany(module => module.Lessons)
+                    .Where(lesson => lesson.IsCompleted)
+                    .Select(lesson => lesson.Id)
+                    .ToList();
+
+                state.CourseProgress.Add(new CourseProgressState
+                {
+                    CourseId = course.Id,
+                    CompletedLessonIds = completedLessonIds,
+                    BestTestScore = course.BestTestScore
+                });
+            }
+
+            foreach (var certificate in Certificates)
+            {
+                state.Certificates.Add(certificate);
+            }
+
+            _stateStorage.Save(state);
+        }
+
         private void GenerateCertificateIfEligible(
     Course course,
     TestResult result)
@@ -473,6 +603,8 @@ namespace EducationalPlatformDesktop.ViewModels
             Certificates.Add(certificate);
 
             OnPropertyChanged(nameof(CertificatesCount));
+            OnPropertyChanged(nameof(HasCertificates));
+            OnPropertyChanged(nameof(IsCertificatesEmpty));
         }
     }
     

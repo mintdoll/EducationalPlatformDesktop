@@ -46,15 +46,22 @@
             Cursor="Hand" />
 
                         <Button Content="Перейти к тесту →"
-            Command="{Binding OpenTestCommand}"
-            Width="170"
-            Height="36"
-            Background="{StaticResource AccentBrush}"
-            Foreground="White"
-            BorderBrush="{StaticResource AccentBorderBrush}"
-            BorderThickness="1"
-            FontWeight="SemiBold"
-            Cursor="Hand" />
+                                Command="{Binding OpenTestCommand}"
+                                Width="170"
+                                Height="36"
+                                Background="{StaticResource AccentBrush}"
+                                Foreground="White"
+                                BorderBrush="{StaticResource AccentBorderBrush}"
+                                BorderThickness="1"
+                                FontWeight="SemiBold"
+                                Cursor="Hand" />
+                        
+                        
+                        <TextBlock Text="{Binding TestAvailabilityMessage}"
+                                   Margin="0,8,0,0"
+                                   Foreground="#6B7280"
+                                   FontSize="13"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
 
