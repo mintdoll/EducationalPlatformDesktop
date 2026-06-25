@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="EducationalPlatform"
+        Title="EduPrime"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource PageBackgroundBrush}">
@@ -27,11 +27,11 @@
 
                 <!-- Блок с названием -->
                 <StackPanel Grid.Row="0" Margin="0,8,0,28">
-                    <TextBlock Text="EducationalPlatform"
+                    <TextBlock Text="EduPrime"
                                Foreground="White"
                                FontSize="26"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Демонстрационная оболочка"
+                    <TextBlock Text="Платформа обучения"
                                Foreground="{StaticResource TextMutedBrush}"
                                FontSize="13"
                                Margin="0,6,0,0" />

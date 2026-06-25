@@ -37,7 +37,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
         private object _currentView = null!;
         private string _pageTitle = "Главная";
-        private string _pageDescription = "Стартовый экран демонстрационной оболочки.";
+        private string _pageDescription = "Стартовый экран платформы EduPrime.";
         private Course? _selectedCourse;
         private Module? _selectedModule;
         private Lesson? _selectedLesson;
@@ -297,7 +297,7 @@ namespace EducationalPlatformDesktop.ViewModels
         {
             CurrentView = _homeView;
             PageTitle = "Главная";
-            PageDescription = "Стартовый экран демонстрационной оболочки.";
+            PageDescription = "Стартовый экран платформы EduPrime.";
         }
 
         private void ShowCourses()
@@ -398,13 +398,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
             result.CourseName = course.Title;
 
-            var apiScore = await FinishTestOnApiAsync(course.Id);
-
-            if (apiScore != null)
-            {
-                result.ScorePercent = apiScore.Value;
-                result.IsPassed = result.ScorePercent >= result.PassingScore;
-            }
+            await FinishTestOnApiAsync(course.Id);
 
             course.ApplyTestResult(result.ScorePercent);
 
@@ -730,7 +724,7 @@ namespace EducationalPlatformDesktop.ViewModels
                 string.IsNullOrWhiteSpace(AppSession.Token))
             {
                 ApiStatusMessage =
-                    "API-режим недоступен: пользователь не авторизован. Используются демонстрационные данные.";
+                    "API-режим недоступен: пользователь не авторизован. Используются локальные данные.";
                 HasApiStatusMessage = true;
                 return;
             }
@@ -821,7 +815,7 @@ namespace EducationalPlatformDesktop.ViewModels
             catch
             {
                 ApiStatusMessage =
-                    "Не удалось подключиться к API. Сейчас используются демонстрационные данные.";
+                    "Не удалось подключиться к API. Сейчас используются локальные данные.";
                 HasApiStatusMessage = true;
             }
         }
@@ -992,7 +986,7 @@ namespace EducationalPlatformDesktop.ViewModels
                 if (response.Data == null)
                 {
                     ApiStatusMessage =
-                        "Сервер не вернул данные сертификата. Создан локальный демонстрационный сертификат.";
+                        "Сервер не вернул данные сертификата. Создан локальный сертификат.";
                     HasApiStatusMessage = true;
                     return null;
                 }
@@ -1015,7 +1009,7 @@ namespace EducationalPlatformDesktop.ViewModels
             catch
             {
                 ApiStatusMessage =
-                    "Не удалось получить сертификат с сервера. Создан локальный демонстрационный сертификат.";
+                    "Не удалось получить сертификат с сервера. Создан локальный сертификат.";
                 HasApiStatusMessage = true;
                 return null;
             }

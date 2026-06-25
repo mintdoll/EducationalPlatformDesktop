@@ -65,7 +65,7 @@
                                FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                Margin="0,0,0,10" />
-                    <TextBlock Text="Это демонстрационная версия WPF-клиента. Здесь позже будет полноценная навигация по курсам, модулям, урокам и текстам лекций."
+                    <TextBlock Text="Здесь доступны курсы, модули, уроки и тексты лекций."
                                FontSize="13"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap"
@@ -88,7 +88,7 @@
                                        FontSize="13"
                                        Foreground="#D7D7DF"
                                        Margin="0,0,0,6" />
-                            <TextBlock Text="Дальше здесь появятся разделы с модулями, уроками и лекциями."
+                            <TextBlock Text="Ниже отображаются разделы с модулями, уроками и лекциями."
                                        FontSize="12"
                                        Foreground="#B9B9C9"
                                        TextWrapping="Wrap" />
