@@ -99,7 +99,6 @@ namespace EducationalPlatformDesktop.ViewModels
         }
 
         public RelayCommand LoginCommand { get; }
-
         public event Action? LoginSucceeded;
 
         private async Task ExecuteLoginAsync(object? parameter)

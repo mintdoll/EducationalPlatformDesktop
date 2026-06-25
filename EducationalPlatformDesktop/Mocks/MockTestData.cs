@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.ObjectModel;
 using EducationalPlatformDesktop.Models;
 
@@ -13,75 +12,10 @@ namespace EducationalPlatformDesktop.Mocks
                 1 => CreatePythonTest(),
                 2 => CreateAccountingTest(),
                 3 => CreateLogisticsTest(),
-                _ => throw new ArgumentException(
-                    $"Для курса с идентификатором {courseId} тест не найден.",
-                    nameof(courseId))
+                _ => CreateGenericTest(courseId)
             };
         }
 
-        // Временная совместимость со старым MainViewModel.
-        // На следующем этапе MainViewModel будет работать через Course.Id.
-        public static Test GetTest(string courseName)
-        {
-            var courseId = courseName switch
-            {
-                "Python для начинающих" => 1,
-                "Бухгалтерский учёт" => 2,
-                "Логистика и закупки" => 3,
-                _ => 1
-            };
-
-            return GetTestForCourse(courseId);
-        }
-
-        public static ObservableCollection<Progress> GetProgress()
-        {
-            return new ObservableCollection<Progress>
-            {
-                new Progress
-                {
-                    CourseName = "Python для начинающих",
-                    CompletedLessons = 3,
-                    TotalLessons = 4,
-                    TestScore = 85,
-                    IsCompleted = false
-                },
-                new Progress
-                {
-                    CourseName = "Бухгалтерский учёт",
-                    CompletedLessons = 4,
-                    TotalLessons = 4,
-                    TestScore = 85,
-                    IsCompleted = true
-                },
-                new Progress
-                {
-                    CourseName = "Логистика и закупки",
-                    CompletedLessons = 0,
-                    TotalLessons = 4,
-                    TestScore = 0,
-                    IsCompleted = false
-                }
-            };
-        }
-
-        public static ObservableCollection<Certificate> GetCertificates()
-        {
-            return new ObservableCollection<Certificate>
-    {
-        new Certificate
-        {
-            Id = "certificate-accounting-demo",
-            Number = "CERT-20260616-ACC001",
-            CourseId = 2,
-            CourseName = "Бухгалтерский учёт",
-            StudentName = "Арина Бутакова",
-            IssuedAt = new DateTime(2026, 6, 16),
-            Score = 85,
-            TestResultId = "demo-accounting-result"
-        }
-    };
-        }
         private static Test CreatePythonTest()
         {
             const int testId = 101;
@@ -103,7 +37,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "Для хранения данных",
                         "Только для вывода текста",
                         "Для установки Python"),
-
                     CreateQuestion(
                         id: 1002,
                         testId: testId,
@@ -113,7 +46,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "bool",
                         "int",
                         "float"),
-
                     CreateQuestion(
                         id: 1003,
                         testId: testId,
@@ -148,7 +80,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "Для регистрации и обобщения информации о деятельности организации",
                         "Только для хранения договоров",
                         "Для создания рекламы"),
-
                     CreateQuestion(
                         id: 2002,
                         testId: testId,
@@ -158,7 +89,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "Рекламное объявление",
                         "Первичный документ",
                         "Рабочий график"),
-
                     CreateQuestion(
                         id: 2003,
                         testId: testId,
@@ -193,7 +123,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "Движение товаров, информации и ресурсов",
                         "Только работу персонала",
                         "Разработку программ"),
-
                     CreateQuestion(
                         id: 3002,
                         testId: testId,
@@ -203,7 +132,6 @@ namespace EducationalPlatformDesktop.Mocks
                         "Для изменения названия организации",
                         "Для предотвращения дефицита и излишков",
                         "Только для выбора транспорта"),
-
                     CreateQuestion(
                         id: 3003,
                         testId: testId,
@@ -213,6 +141,40 @@ namespace EducationalPlatformDesktop.Mocks
                         "Только адрес офиса",
                         "Только количество сотрудников",
                         "Цену, сроки и качество поставки")
+                }
+            };
+        }
+
+        private static Test CreateGenericTest(int courseId)
+        {
+            var testId = 1000 + courseId;
+
+            return new Test
+            {
+                Id = testId,
+                CourseId = courseId,
+                Title = "Итоговый тест",
+                PassingScore = 70,
+                Questions = new ObservableCollection<Question>
+                {
+                    CreateQuestion(
+                        id: testId * 10 + 1,
+                        testId: testId,
+                        text: "Выберите один правильный ответ.",
+                        correctIndex: 0,
+                        "Правильный ответ",
+                        "Неверный ответ",
+                        "Неверный ответ",
+                        "Неверный ответ"),
+                    CreateQuestion(
+                        id: testId * 10 + 2,
+                        testId: testId,
+                        text: "Какое действие завершает тест?",
+                        correctIndex: 1,
+                        "Пропуск вопроса",
+                        "Отправка результата",
+                        "Перезагрузка окна",
+                        "Смена темы")
                 }
             };
         }
