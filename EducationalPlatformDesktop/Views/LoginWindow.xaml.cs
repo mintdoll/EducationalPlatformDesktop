@@ -22,5 +22,6 @@ namespace EducationalPlatformDesktop.Views
             mainWindow.Show();
             Close();
         }
+
     }
 }

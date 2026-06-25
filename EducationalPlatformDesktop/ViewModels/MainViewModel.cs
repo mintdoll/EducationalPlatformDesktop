@@ -7,7 +7,6 @@ using EducationalPlatformDesktop.Models;
 using EducationalPlatformDesktop.Views;
 using EducationalPlatformDesktop.Views.Sections;
 using System.Collections.Generic;
-using EducationalPlatformDesktop.Services;
 using System.Net.Http;
 using System.Threading.Tasks;
 using EducationalPlatformDesktop.Api;
@@ -27,8 +26,8 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly TestView _testView = new();
         private readonly TestResultView _testResultView = new();
         private readonly CertificateView _certificateView = new();
-        private readonly DemoStateStorage _stateStorage = new();
         private readonly OnlineSchoolApiClient _apiClient = new(new HttpClient());
+        private readonly Dictionary<int, UserCourseDto> _userCourseStates = new();
 
         private TestViewModel? _testViewModel;
         private TestResultViewModel? _testResultViewModel;
@@ -125,7 +124,7 @@ namespace EducationalPlatformDesktop.ViewModels
         public bool IsCertificatesVisible => CurrentView == _certificateView;
 
         public int ActiveCoursesCount => Courses.Count(course => course.Progress > 0 && course.Progress < 100);
-        public int LessonsCompletedCount => Courses.Sum(course => course.CompletedLessons);
+        public int LessonsCompletedCount => ProgressItems.Sum(item => item.CompletedLessons);
         public int CertificatesCount => Certificates.Count;
         public int CompletedCoursesCount => ProgressItems.Count(item => item.IsCompleted);
 
@@ -250,12 +249,10 @@ namespace EducationalPlatformDesktop.ViewModels
         public MainViewModel()
         {
 
-            Profile = DemoEducationData.GetProfile();
-            Courses = MockCourseData.GetCourses();
-            Certificates = MockTestData.GetCertificates();
+            Profile = CreateProfileFromSession();
+            Courses = new ObservableCollection<Course>();
+            Certificates = new ObservableCollection<Certificate>();
             _apiClient.SetBearerToken(AppSession.Token);
-
-            ApplySavedState();
 
             ProgressItems = new ObservableCollection<Progress>(
                 Courses.Select(CreateProgressItem));
@@ -278,7 +275,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
             OpenTestCommand =
                 new RelayCommand(
-                 _ => OpenTest(),
+                 async _ => await OpenTestAsync(),
                  _ => SelectedCourse?.CanTakeFinalTest == true);
 
             BackToCoursesCommand = new RelayCommand(_ => ShowCourses());
@@ -292,7 +289,7 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 SelectedCourse = Courses.First();
             }
-            _ = LoadUserProgressFromApiAsync();
+            _ = InitializeCoursesAsync();
         }
 
 
@@ -344,7 +341,7 @@ namespace EducationalPlatformDesktop.ViewModels
                 : "Текст лекции";
         }
 
-        private void OpenTest()
+        private async Task OpenTestAsync()
         {
             if (SelectedCourse == null)
             {
@@ -357,7 +354,24 @@ namespace EducationalPlatformDesktop.ViewModels
 
             _activeTestCourseId = SelectedCourse.Id;
 
+            var testsResult = await _apiClient.GetTestsByCourseIdAsync(SelectedCourse.Id);
+
+            if (!testsResult.IsSuccess)
+            {
+                ApiStatusMessage = testsResult.Message;
+                HasApiStatusMessage = true;
+                return;
+            }
+
+            if (testsResult.Data == null || testsResult.Data.Count == 0)
+            {
+                ApiStatusMessage = "Для этого курса пока нет тестов.";
+                HasApiStatusMessage = true;
+                return;
+            }
+
             var test = MockTestData.GetTestForCourse(SelectedCourse.Id);
+            test.Title = testsResult.Data[0].Name;
 
             _testViewModel = new TestViewModel(test);
             _testViewModel.TestCompleted += OnTestCompleted;
@@ -397,7 +411,6 @@ namespace EducationalPlatformDesktop.ViewModels
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
             await GenerateCertificateIfEligibleAsync(course, result);
-            SaveDemoState();
 
             _testResultViewModel = new TestResultViewModel(
                 result,
@@ -426,13 +439,11 @@ namespace EducationalPlatformDesktop.ViewModels
             LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
 
             if (SelectedCourse == null)
+            {
                 return;
+            }
 
-            foreach (var module in SelectedCourse.Modules)
-                Modules.Add(module);
-
-            if (Modules.Count > 0)
-                SelectedModule = Modules.First();
+            _ = LoadLessonsForSelectedCourseAsync();
         }
 
         private void UpdateLessonsForSelectedModule()
@@ -455,6 +466,206 @@ namespace EducationalPlatformDesktop.ViewModels
         {
             LessonContent = SelectedLesson?.Content ?? "Выберите урок, чтобы увидеть текст лекции.";
         }
+        private async Task InitializeCoursesAsync()
+        {
+            await LoadCoursesAsync();
+            await LoadUserProgressFromApiAsync();
+
+            if (Courses.Count > 0)
+            {
+                SelectedCourse = Courses.First();
+            }
+            else
+            {
+                Modules.Clear();
+                Lessons.Clear();
+                SelectedCourse = null;
+                SelectedModule = null;
+                SelectedLesson = null;
+                LessonContent = "Курсы не найдены.";
+                ApiStatusMessage = "Курсы не найдены.";
+                HasApiStatusMessage = true;
+            }
+        }
+
+        private async Task LoadCoursesAsync()
+        {
+            try
+            {
+                var courseDtos = await _apiClient.GetCoursesAsync();
+
+                Courses.Clear();
+
+                foreach (var dto in courseDtos)
+                {
+                    Courses.Add(MapCourse(dto));
+                }
+
+                NotifyCourseSummaryChanged();
+
+                if (Courses.Count == 0)
+                {
+                    ApiStatusMessage = "Курсы не найдены.";
+                    HasApiStatusMessage = true;
+                }
+                else
+                {
+                    ApiStatusMessage = string.Empty;
+                    HasApiStatusMessage = false;
+                }
+            }
+            catch
+            {
+                Courses.Clear();
+                NotifyCourseSummaryChanged();
+
+                ApiStatusMessage = "Не удалось загрузить курсы из API.";
+                HasApiStatusMessage = true;
+            }
+        }
+
+        private async Task LoadLessonsForSelectedCourseAsync()
+        {
+            var course = SelectedCourse;
+
+            if (course == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var lessonDtos = await _apiClient.GetLessonsByCourseIdAsync(course.Id);
+
+                var module = new Module
+                {
+                    Id = course.Id,
+                    CourseId = course.Id,
+                    Title = "Лекции курса"
+                };
+
+                foreach (var dto in lessonDtos)
+                {
+                    module.Lessons.Add(MapLesson(dto));
+                }
+
+                course.Modules.Clear();
+                course.Modules.Add(module);
+
+                Modules.Clear();
+                Modules.Add(module);
+
+                if (_userCourseStates.TryGetValue(course.Id, out var userCourse))
+                {
+                    ApplyUserCourseProgress(module, userCourse.Progress);
+                    course.IsPurchased = true;
+                    course.RefreshProgress();
+                }
+
+                SelectedModule = module;
+
+                if (module.Lessons.Count > 0)
+                {
+                    SelectedLesson = module.Lessons.First();
+                }
+                else
+                {
+                    SelectedLesson = null;
+                    LessonContent = "Для этого курса пока нет лекций.";
+                }
+            }
+            catch
+            {
+                Modules.Clear();
+                Lessons.Clear();
+                SelectedModule = null;
+                SelectedLesson = null;
+                LessonContent = "Не удалось загрузить лекции курса.";
+            }
+        }
+
+        private static void ApplyUserCourseProgress(Module module, int progressPercent)
+        {
+            if (module.Lessons.Count == 0)
+            {
+                return;
+            }
+
+            var completedCount = (int)Math.Round(
+                module.Lessons.Count * progressPercent / 100.0);
+
+            foreach (var lesson in module.Lessons.Take(completedCount))
+            {
+                lesson.IsCompleted = true;
+            }
+        }
+
+        private static Course MapCourse(CourseDto dto)
+        {
+            return new Course
+            {
+                Id = dto.Id,
+                Title = dto.Name ?? string.Empty,
+                Track = dto.Purpose ?? string.Empty,
+                Teacher = dto.Teacher ?? string.Empty,
+                Description = dto.Description ?? string.Empty,
+                IsPurchased = false
+            };
+        }
+
+        private static Lesson MapLesson(LessonDto dto)
+        {
+            return new Lesson
+            {
+                Id = dto.Id,
+                CourseId = dto.CourseId,
+                ModuleId = dto.CourseId,
+                Title = dto.Name ?? string.Empty,
+                Description = dto.Description ?? string.Empty,
+                Content = !string.IsNullOrWhiteSpace(dto.Content)
+                    ? dto.Content
+                    : dto.Description ?? string.Empty,
+                Url = dto.Url ?? string.Empty,
+                DurationMinutes = EstimateDurationMinutes(dto.Content)
+            };
+        }
+
+        private static int EstimateDurationMinutes(string? content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return 5;
+            }
+
+            return Math.Max(5, (int)Math.Ceiling(content.Length / 240.0) * 5);
+        }
+
+        private static UserProfile CreateProfileFromSession()
+        {
+            var fullName = AppSession.FullName;
+
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                fullName = "Студент";
+            }
+
+            return new UserProfile
+            {
+                FullName = fullName,
+                EmailOrMax = AppSession.Email ?? string.Empty,
+                Group = AppSession.Role ?? "student",
+                Role = AppSession.Role ?? "student"
+            };
+        }
+
+        private void NotifyCourseSummaryChanged()
+        {
+            OnPropertyChanged(nameof(HasCourses));
+            OnPropertyChanged(nameof(IsCoursesEmpty));
+            OnPropertyChanged(nameof(ActiveCoursesCount));
+            OnPropertyChanged(nameof(LessonsCompletedCount));
+            OpenTestCommand.RaiseCanExecuteChanged();
+        }
         private void CompleteLesson(Lesson? lesson)
         {
             if (lesson == null || lesson.IsCompleted)
@@ -472,43 +683,18 @@ namespace EducationalPlatformDesktop.ViewModels
                 return;
             }
 
+            course.SetProgressOverride(null);
             course.RefreshProgress();
 
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
             OpenTestCommand.RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(TestAvailabilityMessage));
-            SaveDemoState();
         }
 
-        private Progress CreateProgressItem(Course course)
-        {
-            return new Progress
-            {
-                CourseId = course.Id,
-                CourseName = course.Title,
-                CompletedLessons = course.CompletedLessons,
-                TotalLessons = course.TotalLessons,
-                TestScore = course.BestTestScore,
-                OverallPercentage = course.Progress,
-                IsCompleted = course.IsCourseCompleted
-            };
-        }
         private void UpdateProgressForCourse(Course course)
         {
-            var oldItem = ProgressItems.FirstOrDefault(
-                item => item.CourseId == course.Id);
-
-            var newItem = CreateProgressItem(course);
-
-            if (oldItem == null)
-            {
-                ProgressItems.Add(newItem);
-                return;
-            }
-
-            var index = ProgressItems.IndexOf(oldItem);
-            ProgressItems[index] = newItem;
+            UpdateProgressForCourse(CreateProgressItem(course));
         }
         private void NotifyProgressSummaryChanged()
         {
@@ -516,6 +702,7 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(LessonsCompletedCount));
             OnPropertyChanged(nameof(CompletedCoursesCount));
             OnPropertyChanged(nameof(AverageProgress));
+            OpenTestCommand.RaiseCanExecuteChanged();
 
             OnPropertyChanged(nameof(HasCourses));
             OnPropertyChanged(nameof(HasProgressItems));
@@ -525,7 +712,7 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(IsProgressEmpty));
             OnPropertyChanged(nameof(IsCertificatesEmpty));
         }
-        private void RetryCurrentTest()
+        private async void RetryCurrentTest()
         {
             if (_activeTestCourseId == null)
             {
@@ -535,7 +722,7 @@ namespace EducationalPlatformDesktop.ViewModels
             SelectedCourse = Courses.FirstOrDefault(
                 course => course.Id == _activeTestCourseId.Value);
 
-            OpenTest();
+            await OpenTestAsync();
         }
         private async Task LoadUserProgressFromApiAsync()
         {
@@ -560,19 +747,14 @@ namespace EducationalPlatformDesktop.ViewModels
                     return;
                 }
 
+                _userCourseStates.Clear();
+
                 if (result.Data == null || result.Data.Count == 0)
                 {
                     Courses.Clear();
                     ProgressItems.Clear();
-                    Modules.Clear();
-                    Lessons.Clear();
 
-                    SelectedCourse = null;
-                    SelectedModule = null;
-                    SelectedLesson = null;
-
-                    ApiStatusMessage =
-                        "У вас пока нет приобретённых курсов. После покупки или назначения курса он появится в этом разделе.";
+                    ApiStatusMessage = "У вас пока нет приобретённых курсов.";
                     HasApiStatusMessage = true;
 
                     NotifyProgressSummaryChanged();
@@ -582,8 +764,29 @@ namespace EducationalPlatformDesktop.ViewModels
                 ApiStatusMessage = string.Empty;
                 HasApiStatusMessage = false;
 
+                var allowedCourseIds = result.Data
+                    .Select(item => item.CourseId)
+                    .ToHashSet();
+
+                var visibleCourses = Courses
+                    .Where(course => allowedCourseIds.Contains(course.Id))
+                    .ToList();
+
+                Courses.Clear();
+                foreach (var course in visibleCourses)
+                {
+                    course.IsPurchased = false;
+                    course.SetProgressOverride(null);
+                    course.RefreshProgress();
+                    Courses.Add(course);
+                }
+
+                ProgressItems.Clear();
+
                 foreach (var userCourse in result.Data)
                 {
+                    _userCourseStates[userCourse.CourseId] = userCourse;
+
                     var course = Courses.FirstOrDefault(
                         item => item.Id == userCourse.CourseId);
 
@@ -592,41 +795,76 @@ namespace EducationalPlatformDesktop.ViewModels
                         continue;
                     }
 
-                    if (userCourse.Completed)
+                    course.IsPurchased = true;
+                    course.SetProgressOverride(userCourse.Progress);
+
+                    var lessonCount = await TryGetLessonCountAsync(course.Id);
+                    var completedLessons = lessonCount == 0
+                        ? 0
+                        : (int)Math.Round(lessonCount * userCourse.Progress / 100.0);
+
+                    UpdateProgressForCourse(new Progress
                     {
-                        foreach (var lesson in course.Modules.SelectMany(module => module.Lessons))
-                        {
-                            lesson.IsCompleted = true;
-                        }
-                    }
-
-                    if (userCourse.Progress > 0 && userCourse.Progress < 100)
-                    {
-                        var allLessons = course.Modules
-                            .SelectMany(module => module.Lessons)
-                            .ToList();
-
-                        var lessonsToComplete = (int)Math.Round(
-                            allLessons.Count * userCourse.Progress / 100.0);
-
-                        foreach (var lesson in allLessons.Take(lessonsToComplete))
-                        {
-                            lesson.IsCompleted = true;
-                        }
-                    }
-
-                    course.RefreshProgress();
-                    UpdateProgressForCourse(course);
+                        CourseId = course.Id,
+                        CourseName = course.Title,
+                        CompletedLessons = completedLessons,
+                        TotalLessons = lessonCount,
+                        TestScore = course.BestTestScore,
+                        OverallPercentage = userCourse.Progress,
+                        IsCompleted = userCourse.Completed
+                    });
                 }
 
+                NotifyCourseSummaryChanged();
                 NotifyProgressSummaryChanged();
-                SaveDemoState();
             }
             catch
             {
                 ApiStatusMessage =
                     "Не удалось подключиться к API. Сейчас используются демонстрационные данные.";
                 HasApiStatusMessage = true;
+            }
+        }
+
+        private static Progress CreateProgressItem(Course course)
+        {
+            return new Progress
+            {
+                CourseId = course.Id,
+                CourseName = course.Title,
+                CompletedLessons = course.CompletedLessons,
+                TotalLessons = course.TotalLessons,
+                TestScore = course.BestTestScore,
+                OverallPercentage = course.Progress,
+                IsCompleted = course.IsCourseCompleted
+            };
+        }
+
+        private void UpdateProgressForCourse(Progress item)
+        {
+            var oldItem = ProgressItems.FirstOrDefault(
+                progress => progress.CourseId == item.CourseId);
+
+            if (oldItem == null)
+            {
+                ProgressItems.Add(item);
+                return;
+            }
+
+            var index = ProgressItems.IndexOf(oldItem);
+            ProgressItems[index] = item;
+        }
+
+        private async Task<int> TryGetLessonCountAsync(int courseId)
+        {
+            try
+            {
+                var lessons = await _apiClient.GetLessonsByCourseIdAsync(courseId);
+                return lessons.Count;
+            }
+            catch
+            {
+                return 0;
             }
         }
 
@@ -670,79 +908,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 return null;
             }
         }
-        private void ApplySavedState()
-        {
-            var state = _stateStorage.Load();
-
-            if (state == null)
-            {
-                return;
-            }
-
-            foreach (var courseState in state.CourseProgress)
-            {
-                var course = Courses.FirstOrDefault(
-                    item => item.Id == courseState.CourseId);
-
-                if (course == null)
-                {
-                    continue;
-                }
-
-                course.BestTestScore = courseState.BestTestScore;
-
-                var lessons = course.Modules
-                    .SelectMany(module => module.Lessons);
-
-                foreach (var lesson in lessons)
-                {
-                    lesson.IsCompleted =
-                        courseState.CompletedLessonIds.Contains(lesson.Id);
-                }
-
-                course.RefreshProgress();
-            }
-
-            if (state.Certificates.Count > 0)
-            {
-                Certificates.Clear();
-
-                foreach (var certificate in state.Certificates)
-                {
-                    Certificates.Add(certificate);
-                }
-            }
-        }
-
-
-        private void SaveDemoState()
-        {
-            var state = new DemoAppState();
-
-            foreach (var course in Courses)
-            {
-                var completedLessonIds = course.Modules
-                    .SelectMany(module => module.Lessons)
-                    .Where(lesson => lesson.IsCompleted)
-                    .Select(lesson => lesson.Id)
-                    .ToList();
-
-                state.CourseProgress.Add(new CourseProgressState
-                {
-                    CourseId = course.Id,
-                    CompletedLessonIds = completedLessonIds,
-                    BestTestScore = course.BestTestScore
-                });
-            }
-
-            foreach (var certificate in Certificates)
-            {
-                state.Certificates.Add(certificate);
-            }
-
-            _stateStorage.Save(state);
-        }
-
         private async Task GenerateCertificateIfEligibleAsync(
      Course course,
      TestResult result)

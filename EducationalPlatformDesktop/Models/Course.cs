@@ -9,6 +9,8 @@ namespace EducationalPlatformDesktop.Models
     public class Course : INotifyPropertyChanged
     {
         private int _bestTestScore;
+        private int? _progressOverride;
+        private bool _isPurchased;
 
         public int Id { get; set; }
 
@@ -20,7 +22,20 @@ namespace EducationalPlatformDesktop.Models
 
         public string Description { get; set; } = string.Empty;
 
-        public bool IsPurchased { get; set; }
+        public bool IsPurchased
+        {
+            get => _isPurchased;
+            set
+            {
+                if (_isPurchased == value)
+                {
+                    return;
+                }
+
+                _isPurchased = value;
+                OnPropertyChanged(nameof(IsPurchased));
+            }
+        }
 
         public int PassingScore { get; set; } = 70;
 
@@ -64,17 +79,17 @@ namespace EducationalPlatformDesktop.Models
             }
         }
 
-        public int Progress => LessonProgressPercent;
+        public int Progress => _progressOverride ?? LessonProgressPercent;
 
         public bool IsTestPassed => BestTestScore >= PassingScore;
 
 
         public bool IsCourseCompleted =>
-            LessonProgressPercent >= 90 &&
+            Progress >= 90 &&
             IsTestPassed;
 
         public bool CanTakeFinalTest =>
-            LessonProgressPercent >= 90;
+            Progress >= 90;
 
         public bool CanReceiveCertificate =>
             IsCourseCompleted;
@@ -83,7 +98,7 @@ namespace EducationalPlatformDesktop.Models
         {
             get
             {
-                if (CompletedLessons == 0 && BestTestScore == 0)
+                if (Progress == 0 && BestTestScore == 0)
                 {
                     return "Не начат";
                 }
@@ -109,9 +124,19 @@ namespace EducationalPlatformDesktop.Models
             }
         }
 
+        public void SetProgressOverride(int? progressPercent)
+        {
+            if (_progressOverride == progressPercent)
+            {
+                return;
+            }
+
+            _progressOverride = progressPercent;
+            RefreshProgress();
+        }
+
         public void RefreshProgress()
         {
-            
             OnPropertyChanged(nameof(BestTestScore));
             OnPropertyChanged(nameof(TotalLessons));
             OnPropertyChanged(nameof(CompletedLessons));
