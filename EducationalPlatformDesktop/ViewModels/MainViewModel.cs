@@ -28,6 +28,8 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly CertificateView _certificateView = new();
         private readonly OnlineSchoolApiClient _apiClient = new(new HttpClient());
         private readonly Dictionary<int, UserCourseDto> _userCourseStates = new();
+        private readonly Dictionary<int, HashSet<int>> _completedLessonsByCourse = new();
+        private readonly Dictionary<int, int> _bestTestScoreByCourse = new();
 
         private TestViewModel? _testViewModel;
         private TestResultViewModel? _testResultViewModel;
@@ -123,7 +125,8 @@ namespace EducationalPlatformDesktop.ViewModels
         public bool IsTestResultVisible => CurrentView == _testResultView;
         public bool IsCertificatesVisible => CurrentView == _certificateView;
 
-        public int ActiveCoursesCount => Courses.Count(course => course.Progress > 0 && course.Progress < 100);
+        public int ActiveCoursesCount =>
+            Courses.Count(course => course.Progress > 0 && !course.IsCourseCompleted);
         public int LessonsCompletedCount => ProgressItems.Sum(item => item.CompletedLessons);
         public int CertificatesCount => Certificates.Count;
         public int CompletedCoursesCount => ProgressItems.Count(item => item.IsCompleted);
@@ -401,6 +404,7 @@ namespace EducationalPlatformDesktop.ViewModels
             await FinishTestOnApiAsync(course.Id);
 
             course.ApplyTestResult(result.ScorePercent);
+            _bestTestScoreByCourse[course.Id] = course.BestTestScore;
 
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
@@ -556,6 +560,18 @@ namespace EducationalPlatformDesktop.ViewModels
                     course.RefreshProgress();
                 }
 
+                if (_completedLessonsByCourse.TryGetValue(course.Id, out var completedLessons))
+                {
+                    foreach (var lesson in module.Lessons.Where(
+                                 lesson => completedLessons.Contains(lesson.Id)))
+                    {
+                        lesson.IsCompleted = true;
+                    }
+
+                    course.SetProgressOverride(null);
+                    course.RefreshProgress();
+                }
+
                 SelectedModule = module;
 
                 if (module.Lessons.Count > 0)
@@ -669,6 +685,14 @@ namespace EducationalPlatformDesktop.ViewModels
 
             lesson.IsCompleted = true;
 
+            if (!_completedLessonsByCourse.TryGetValue(lesson.CourseId, out var completedLessons))
+            {
+                completedLessons = new HashSet<int>();
+                _completedLessonsByCourse[lesson.CourseId] = completedLessons;
+            }
+
+            completedLessons.Add(lesson.Id);
+
             var course = Courses.FirstOrDefault(
                 item => item.Id == lesson.CourseId);
 
@@ -747,6 +771,8 @@ namespace EducationalPlatformDesktop.ViewModels
                 {
                     Courses.Clear();
                     ProgressItems.Clear();
+                    _bestTestScoreByCourse.Clear();
+                    Certificates.Clear();
 
                     ApiStatusMessage = "У вас пока нет приобретённых курсов.";
                     HasApiStatusMessage = true;
@@ -757,6 +783,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
                 ApiStatusMessage = string.Empty;
                 HasApiStatusMessage = false;
+                Certificates.Clear();
 
                 var allowedCourseIds = result.Data
                     .Select(item => item.CourseId)
@@ -792,6 +819,11 @@ namespace EducationalPlatformDesktop.ViewModels
                     course.IsPurchased = true;
                     course.SetProgressOverride(userCourse.Progress);
 
+                    if (_bestTestScoreByCourse.TryGetValue(course.Id, out var cachedScore))
+                    {
+                        course.BestTestScore = cachedScore;
+                    }
+
                     var lessonCount = await TryGetLessonCountAsync(course.Id);
                     var completedLessons = lessonCount == 0
                         ? 0
@@ -809,8 +841,16 @@ namespace EducationalPlatformDesktop.ViewModels
                     });
                 }
 
+                await LoadCertificatesFromApiAsync(
+                    result.Data
+                        .Where(item => item.Completed)
+                        .Select(item => item.CourseId));
+
                 NotifyCourseSummaryChanged();
                 NotifyProgressSummaryChanged();
+                OnPropertyChanged(nameof(CertificatesCount));
+                OnPropertyChanged(nameof(HasCertificates));
+                OnPropertyChanged(nameof(IsCertificatesEmpty));
             }
             catch
             {
@@ -859,6 +899,64 @@ namespace EducationalPlatformDesktop.ViewModels
             catch
             {
                 return 0;
+            }
+        }
+
+        private async Task LoadCertificatesFromApiAsync(IEnumerable<int> completedCourseIds)
+        {
+            if (AppSession.UserId == null ||
+                string.IsNullOrWhiteSpace(AppSession.Token))
+            {
+                return;
+            }
+
+            foreach (var courseId in completedCourseIds.Distinct())
+            {
+                try
+                {
+                    var response = await _apiClient.GetCertificateAsync(
+                        AppSession.UserId.Value,
+                        courseId);
+
+                    if (!response.IsSuccess || response.Data == null)
+                    {
+                        continue;
+                    }
+
+                    var certificate = new Certificate
+                    {
+                        Id = Guid.NewGuid().ToString("N"),
+                        Number = response.Data.CertificateNumber,
+                        CourseId = courseId,
+                        CourseName = response.Data.CourseName,
+                        StudentName = response.Data.FullName,
+                        IssuedAt = response.Data.IssueDate,
+                        // The API does not expose the exact test score, only completion state.
+                        Score = 100
+                    };
+
+                    Certificates.Add(certificate);
+
+                    var course = Courses.FirstOrDefault(item => item.Id == courseId);
+                    if (course != null)
+                    {
+                        course.BestTestScore = Math.Max(course.BestTestScore, certificate.Score);
+
+                        var progressItem = ProgressItems.FirstOrDefault(
+                            item => item.CourseId == courseId);
+
+                        if (progressItem != null)
+                        {
+                            progressItem.TestScore = course.BestTestScore;
+                            progressItem.IsCompleted = true;
+                            UpdateProgressForCourse(progressItem);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore a single certificate load failure so the rest of the page still renders.
+                }
             }
         }
 

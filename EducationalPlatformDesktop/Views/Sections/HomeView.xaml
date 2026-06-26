@@ -19,7 +19,7 @@
                                    FontSize="28"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="Активных курса"
+                        <TextBlock Text="Активных курсов"
                                    FontSize="12"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,6,0,0" />
