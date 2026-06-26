@@ -84,7 +84,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="EDUCATIONAL PLATFORM"
+                <TextBlock Text="EduPrime"
                            HorizontalAlignment="Center"
                            FontSize="13"
                            FontWeight="SemiBold"
