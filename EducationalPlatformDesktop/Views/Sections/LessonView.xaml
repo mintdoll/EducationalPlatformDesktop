@@ -30,6 +30,19 @@
                 FontWeight="SemiBold"
                 Cursor="Hand" />
 
+                        <Button Content="{Binding NextLessonButtonText}"
+                Command="{Binding OpenNextLessonCommand}"
+                IsEnabled="{Binding HasNextLesson}"
+                MinWidth="220"
+                Height="36"
+                Margin="0,0,10,8"
+                Background="{StaticResource AccentBrush}"
+                Foreground="White"
+                BorderBrush="{StaticResource AccentBorderBrush}"
+                BorderThickness="1"
+                FontWeight="SemiBold"
+                Cursor="Hand" />
+
                         <Button Content="{Binding SelectedLesson.CompletionButtonText}"
                 Command="{Binding CompleteLessonCommand}"
                 CommandParameter="{Binding SelectedLesson}"
@@ -43,25 +56,7 @@
                 BorderThickness="1"
                 FontWeight="SemiBold"
                 Cursor="Hand" />
-
-                        <Button Content="Перейти к тесту →"
-                Command="{Binding OpenTestCommand}"
-                Width="180"
-                Height="36"
-                Margin="0,0,0,8"
-                Background="{StaticResource AccentBrush}"
-                Foreground="White"
-                BorderBrush="{StaticResource AccentBorderBrush}"
-                BorderThickness="1"
-                FontWeight="SemiBold"
-                Cursor="Hand" />
                     </WrapPanel>
-
-                    <TextBlock Text="{Binding TestAvailabilityMessage}"
-               Margin="0,4,0,0"
-               Foreground="#6B7280"
-               FontSize="13"
-               TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel>
