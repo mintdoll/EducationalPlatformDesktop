@@ -56,7 +56,7 @@
                    Foreground="{StaticResource TextPrimaryBrush}"
                    TextAlignment="Center" />
 
-                    <TextBlock Text="Когда у пользователя появятся доступные курсы или он начнёт обучение, здесь отобразится прогресс."
+                    <TextBlock Text="У Вас сейчас нет доступых курсов. Как только они появятся, здесь отобразится прогресс"
                    Margin="0,8,0,0"
                    FontSize="14"
                    Foreground="{StaticResource TextSecondaryBrush}"

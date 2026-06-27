@@ -3,84 +3,273 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="Transparent">
 
-    <Grid Margin="24">
-        <Border Background="{StaticResource SecondaryBackgroundBrush}"
-                BorderBrush="{StaticResource CardBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="16"
-                Padding="24"
-                Width="520"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top">
-            <StackPanel>
-                <TextBlock Text="Профиль"
-                           FontSize="22"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           Margin="0,0,0,16" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24">
 
-                <StackPanel Orientation="Horizontal"
-                            Margin="0,0,0,18">
-                    <Border Width="52"
-                            Height="52"
-                            CornerRadius="26"
-                            Background="{StaticResource AccentBrush}">
+            <Border Background="{StaticResource CardBackgroundBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="24"
+                    Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="72"
+                            Height="72"
+                            CornerRadius="36"
+                            Background="{StaticResource AccentBrush}"
+                            VerticalAlignment="Top">
                         <TextBlock Text="{Binding Profile.Initials}"
                                    Foreground="White"
-                                   FontSize="16"
+                                   FontSize="22"
                                    FontWeight="SemiBold"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                     </Border>
 
-                    <StackPanel Margin="14,0,0,0"
-                                VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Profile.FullName}"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="{Binding Profile.Role}"
+                    <StackPanel Grid.Column="1"
+                                Margin="18,0,0,0">
+                        <TextBlock Text="Личный кабинет"
                                    FontSize="12"
                                    Foreground="{StaticResource TextMutedBrush}" />
-                    </StackPanel>
-                </StackPanel>
 
-                <TextBlock Text="{Binding Profile.FullName, StringFormat=ФИО: {0}}"
-                           FontSize="13"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="{Binding Profile.EmailOrMax, StringFormat=Email/MAX: {0}}"
-                           FontSize="13"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="{Binding Profile.Group, StringFormat=Группа: {0}}"
-                           FontSize="13"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="{Binding Profile.Role, StringFormat=Роль: {0}}"
-                           FontSize="13"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,0,0,8" />
-
-                <Border Background="White"
-                        BorderBrush="{StaticResource CardBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="16"
-                        Margin="0,18,0,0">
-                    <StackPanel>
-                        <TextBlock Text="Что дальше"
-                                   FontSize="14"
+                        <TextBlock Text="{Binding Profile.FullName}"
+                                   FontSize="24"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="На следующем шаге можно будет отдельно улучшать профиль или вынести его в отдельный экран без изменения общей оболочки."
+                                   Margin="0,4,0,6" />
+
+                        <TextBlock Text="Студент платформы EduPrime"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,0,0,14" />
+
+                        <WrapPanel>
+                            <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                                    CornerRadius="10"
+                                    Padding="10,6"
+                                    Margin="0,0,8,8">
+                                <TextBlock Text="{Binding Profile.EmailOrMax, StringFormat=Email: {0}}"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                            </Border>
+
+                            <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                                    CornerRadius="10"
+                                    Padding="10,6"
+                                    Margin="0,0,8,8">
+                                <TextBlock Text="{Binding Profile.Role, StringFormat=Роль: {0}}"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                            </Border>
+
+                            <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                                    CornerRadius="10"
+                                    Padding="10,6"
+                                    Margin="0,0,8,8">
+                                <TextBlock Text="{Binding Profile.Group, StringFormat=Группа: {0}}"
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <UniformGrid Columns="4"
+                         Margin="0,0,0,18">
+                <Border Style="{StaticResource MetricCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Courses.Count}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Доступных курсов"
                                    FontSize="12"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource MetricCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ActiveCoursesCount}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Активных курсов"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource MetricCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding CompletedCoursesCount}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Завершено курсов"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource MetricCardStyle}" Margin="0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding CertificatesCount}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Сертификатов"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Background="{StaticResource SecondaryBackgroundBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="Статистика"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,16" />
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Пройдено уроков"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding LessonsCompletedCount}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Средний прогресс"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding AverageProgress, StringFormat={}{0}%}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Курсы в работе"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ActiveCoursesCount}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Успешно завершено"
+                                       FontSize="13"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding CompletedCoursesCount}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="Достижения"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,16" />
+
+                        <Border Background="#EFEDFF"
+                                CornerRadius="12"
+                                Padding="14"
+                                Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Сертификаты"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding CertificatesCount, StringFormat=Получено: {0}}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                                CornerRadius="12"
+                                Padding="14"
+                                Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Прогресс обучения"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding AverageProgress, StringFormat=Средний результат: {0}%}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Профиль показывает сводную информацию по обучению, доступным курсам и полученным сертификатам."
+                                   FontSize="13"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
-            </StackPanel>
-        </Border>
-    </Grid>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
