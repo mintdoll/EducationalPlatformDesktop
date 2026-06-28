@@ -1,0 +1,198 @@
+﻿<UserControl x:Class="EducationalPlatformDesktop.Views.CertificateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource PageBackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Список сертификатов -->
+        <Border Grid.Column="0"
+                Padding="18"
+                Background="{StaticResource SecondaryBackgroundBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="18">
+
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Text="Мои сертификаты"
+                           Margin="0,0,0,16"
+                           FontSize="21"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextPrimaryBrush}" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Certificates}"
+                                   Visibility="{Binding HasCertificates, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.SelectCertificateCommand,
+                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="0,0,0,10"
+                                        Padding="14"
+                                        HorizontalContentAlignment="Stretch"
+                                        Background="White"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        Cursor="Hand">
+
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding CourseName}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+
+                                        <TextBlock Text="{Binding Number}"
+                                                   Margin="0,6,0,0"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource AccentBrush}" />
+
+                                        <TextBlock Text="{Binding IssuedDate}"
+                                                   Margin="0,4,0,0"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Просмотр сертификата -->
+        <Border Grid.Column="2"
+                Padding="36"
+                Background="{StaticResource CardBackgroundBrush}"
+                BorderBrush="{StaticResource AccentBorderBrush}"
+                BorderThickness="2"
+                CornerRadius="20"
+                Visibility="{Binding HasSelectedCertificate,
+                             Converter={StaticResource BoolToVis}}">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="EduPrime"
+                           HorizontalAlignment="Center"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource AccentBrush}" />
+
+                <StackPanel Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+
+                    <TextBlock Text="СЕРТИФИКАТ"
+                               HorizontalAlignment="Center"
+                               FontSize="34"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" />
+
+                    <TextBlock Text="подтверждает успешное завершение курса"
+                               Margin="0,8,0,24"
+                               HorizontalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+
+                    <TextBlock Text="{Binding SelectedCertificate.StudentName}"
+                               HorizontalAlignment="Center"
+                               FontSize="27"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBrush}" />
+
+                    <TextBlock Text="успешно завершил(а) образовательный курс"
+                               Margin="0,18,0,8"
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+
+                    <TextBlock Text="{Binding SelectedCertificate.CourseName}"
+                               MaxWidth="600"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               FontSize="23"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" />
+
+                    <TextBlock Text="{Binding SelectedCertificate.ScoreText}"
+                               Margin="0,18,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="15"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </StackPanel>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Дата выдачи"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+
+                        <TextBlock Text="{Binding SelectedCertificate.IssuedDate}"
+                                   Margin="0,4,0,0"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Right">
+                        <TextBlock Text="Уникальный номер"
+                                   HorizontalAlignment="Right"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+
+                        <TextBlock Text="{Binding SelectedCertificate.Number}"
+                                   Margin="0,4,0,0"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Пустое состояние -->
+        <Border Grid.Column="2"
+                Padding="30"
+                Background="{StaticResource SecondaryBackgroundBrush}"
+                CornerRadius="18"
+                Visibility="{Binding IsEmpty,
+                             Converter={StaticResource BoolToVis}}">
+
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+
+                <TextBlock Text="Сертификатов пока нет"
+                           HorizontalAlignment="Center"
+                           FontSize="23"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextPrimaryBrush}" />
+
+                <TextBlock Text="Завершите не менее 90% уроков и сдайте итоговый тест."
+                           Margin="0,10,0,0"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           FontSize="14"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

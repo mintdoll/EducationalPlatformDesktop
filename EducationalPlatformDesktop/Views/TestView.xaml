@@ -1,0 +1,246 @@
+<UserControl x:Class="EducationalPlatformDesktop.Views.TestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource PageBackgroundBrush}"
+             Focusable="True">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="D1" Command="{Binding SelectOptionCommand}" CommandParameter="0" />
+        <KeyBinding Key="D2" Command="{Binding SelectOptionCommand}" CommandParameter="1" />
+        <KeyBinding Key="D3" Command="{Binding SelectOptionCommand}" CommandParameter="2" />
+        <KeyBinding Key="D4" Command="{Binding SelectOptionCommand}" CommandParameter="3" />
+        <KeyBinding Key="NumPad1" Command="{Binding SelectOptionCommand}" CommandParameter="0" />
+        <KeyBinding Key="NumPad2" Command="{Binding SelectOptionCommand}" CommandParameter="1" />
+        <KeyBinding Key="NumPad3" Command="{Binding SelectOptionCommand}" CommandParameter="2" />
+        <KeyBinding Key="NumPad4" Command="{Binding SelectOptionCommand}" CommandParameter="3" />
+        <KeyBinding Key="Enter" Command="{Binding AnswerCommand}" />
+    </UserControl.InputBindings>
+
+    <UserControl.Resources>
+        <Style x:Key="AnswerItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Card"
+                                Padding="16,14"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="Background" Value="#FAF8F3" />
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource AccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Card" Property="Background" Value="#EFEDFF" />
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Card" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24">
+            <Border MaxWidth="900"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Background="{StaticResource CardBackgroundBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="20"
+                    Padding="28">
+                <Grid>
+                    <Grid Visibility="{Binding IsFinished, Converter={StaticResource InverseBoolToVis}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Проверка знаний"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}" />
+
+                            <TextBlock Grid.Column="1"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="13">
+                                <Run Text="Вопрос " />
+                                <Run Text="{Binding QuestionNumber, Mode=OneWay}" />
+                                <Run Text=" из " />
+                                <Run Text="{Binding TotalQuestions, Mode=OneWay}" />
+                            </TextBlock>
+                        </Grid>
+
+                        <ProgressBar Grid.Row="1"
+                                     Height="6"
+                                     Margin="0,12,0,28"
+                                     Maximum="100"
+                                     Value="{Binding QuestionProgress, Mode=OneWay}"
+                                     Foreground="{StaticResource AccentBrush}"
+                                     Background="{StaticResource SecondaryBackgroundBrush}" />
+
+                        <ScrollViewer Grid.Row="2"
+                                      VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="{Binding CurrentQuestion.Text}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,24" />
+
+                                <ListBox ItemsSource="{Binding CurrentQuestion.Options}"
+                                         SelectedIndex="{Binding SelectedOption, Mode=TwoWay}"
+                                         ItemContainerStyle="{StaticResource AnswerItemStyle}"
+                                         Background="Transparent"
+                                         BorderThickness="0">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="28" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Text="•"
+                                                           FontSize="20"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           VerticalAlignment="Center" />
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Text}"
+                                                           FontSize="15"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           TextWrapping="Wrap"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Grid Grid.Row="3"
+                              Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Клавиши 1-4 - выбрать ответ, Enter - подтвердить"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,16,0"
+                                       VerticalAlignment="Center" />
+
+                            <Button Grid.Column="1"
+                                    Content="Ответить"
+                                    Command="{Binding AnswerCommand}"
+                                    Width="150"
+                                    Height="40"
+                                    Background="{StaticResource AccentBrush}"
+                                    Foreground="White"
+                                    BorderBrush="{StaticResource AccentBorderBrush}"
+                                    BorderThickness="1"
+                                    FontWeight="SemiBold"
+                                    Cursor="Hand" />
+                        </Grid>
+                    </Grid>
+
+                    <StackPanel Visibility="{Binding IsFinished, Converter={StaticResource BoolToVis}}"
+                                Width="560"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <Border Width="72"
+                                Height="72"
+                                CornerRadius="36"
+                                Background="#EFEDFF"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="✓"
+                                       FontSize="34"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+
+                        <TextBlock Text="{Binding ResultTitle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Margin="0,18,0,8" />
+
+                        <TextBlock HorizontalAlignment="Center"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="22"
+                                   FontWeight="SemiBold">
+                            <Run Text="{Binding ScorePercent, Mode=OneWay}" />
+                            <Run Text="% · " />
+                            <Run Text="{Binding CorrectAnswers, Mode=OneWay}" />
+                            <Run Text=" из " />
+                            <Run Text="{Binding TotalQuestions, Mode=OneWay}" />
+                        </TextBlock>
+
+                        <TextBlock Text="{Binding ResultDescription}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="14"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Margin="0,16,0,24" />
+
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+                            <Button Content="К курсам"
+                                    Command="{Binding BackCommand}"
+                                    Width="140"
+                                    Height="40"
+                                    Margin="0,0,12,0"
+                                    Background="{StaticResource SecondaryBackgroundBrush}"
+                                    Foreground="{StaticResource TextPrimaryBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
+                                    Cursor="Hand" />
+
+                            <Button Content="Пройти ещё раз"
+                                    Command="{Binding RestartCommand}"
+                                    Width="160"
+                                    Height="40"
+                                    Background="{StaticResource AccentBrush}"
+                                    Foreground="White"
+                                    BorderBrush="{StaticResource AccentBorderBrush}"
+                                    BorderThickness="1"
+                                    FontWeight="SemiBold"
+                                    Cursor="Hand" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

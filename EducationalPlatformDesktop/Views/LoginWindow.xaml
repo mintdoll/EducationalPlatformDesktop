@@ -1,0 +1,85 @@
+﻿<Window x:Class="EducationalPlatformDesktop.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:EducationalPlatformDesktop.ViewModels"
+        mc:Ignorable="d"
+        Title="Вход"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        ResizeMode="NoResize"
+        Background="#1A1A2E">
+
+    <Grid>
+        <Border Width="330"
+                Padding="28"
+                Background="#534AB7"
+                CornerRadius="18"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            <StackPanel>
+                <TextBlock Text="Вход в систему"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Foreground="White"
+                           Margin="0,0,0,8"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Введите данные для входа"
+                           FontSize="13"
+                           Foreground="#CECBF6"
+                           Margin="0,0,0,18"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="#FCA5A5"
+                           FontSize="12"
+                           Margin="0,0,0,8"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding IsErrorVisible, Converter={StaticResource BoolToVis}}" />
+
+                <TextBlock Text="{Binding SuccessMessage}"
+                           Foreground="#86EFAC"
+                           FontSize="12"
+                           Margin="0,0,0,8"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding IsSuccessVisible, Converter={StaticResource BoolToVis}}" />
+
+                <TextBlock Text="Email"
+                           Foreground="#CECBF6"
+                           Margin="0,8,0,6" />
+
+                <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
+                         Height="34"
+                         Padding="10,6"
+                         Background="#1A1A2E"
+                         Foreground="White"
+                         BorderThickness="0"
+                         CaretBrush="White" />
+
+                <TextBlock Text="Пароль"
+                           Foreground="#CECBF6"
+                           Margin="0,14,0,6" />
+
+                <PasswordBox x:Name="PasswordInput"
+                             Height="34"
+                             Padding="10,6"
+                             Background="#1A1A2E"
+                             Foreground="White"
+                             BorderThickness="0" />
+
+                <Button Content="Войти"
+                        Command="{Binding LoginCommand}"
+                        CommandParameter="{Binding ElementName=PasswordInput}"
+                        Height="36"
+                        Margin="0,18,0,0"
+                        Background="#7F77DD"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        BorderThickness="0"
+                        Cursor="Hand" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
