@@ -150,7 +150,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="Клавиши 1–4 — выбрать ответ, Enter — подтвердить"
+                            <TextBlock Text="Клавиши 1-4 - выбрать ответ, Enter - подтвердить"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        FontSize="12"
                                        TextWrapping="Wrap"

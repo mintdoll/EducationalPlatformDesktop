@@ -32,7 +32,7 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly Dictionary<int, UserCourseDto> _userCourseStates = new();
         private readonly Dictionary<int, HashSet<int>> _completedLessonsByCourse = new();
         private readonly Dictionary<int, int> _bestTestScoreByCourse = new();
-        private readonly Dictionary<int, Module> _lessonModuleCacheByCourse = new();
+        private readonly Dictionary<int, List<Lesson>> _lessonCacheByCourse = new();
         //Часть состояния пока хранится локально в ViewModel, потому что API сервера не предоставляет endpoint’ов и структур для сохранения
         //прогресса по каждому уроку и точного результата теста. Поэтому клиент вынужден временно кэшировать эти данные в памяти текущей сессии
 
@@ -45,7 +45,6 @@ namespace EducationalPlatformDesktop.ViewModels
         private string _pageTitle = "Главная";
         private string _pageDescription = "Стартовый экран платформы EduPrime.";
         private Course? _selectedCourse;
-        private Module? _selectedModule;
         private Lesson? _selectedLesson;
         private string _lessonContent = "Выберите урок, чтобы увидеть текст лекции.";
         private string _apiStatusMessage = string.Empty;
@@ -56,7 +55,6 @@ namespace EducationalPlatformDesktop.ViewModels
         public ObservableCollection<Course> Courses { get; }
         public ObservableCollection<Progress> ProgressItems { get; }
         public ObservableCollection<Certificate> Certificates { get; }
-        public ObservableCollection<Module> Modules { get; } = new();
         public ObservableCollection<Lesson> Lessons { get; } = new();
 
         //Команды позволяют связать действия интерфейса с методами ViewModel
@@ -143,6 +141,7 @@ namespace EducationalPlatformDesktop.ViewModels
         public bool HasCourses => Courses.Count > 0;
         public bool HasProgressItems => ProgressItems.Count > 0;
         public bool HasCertificates => Certificates.Count > 0;
+        public bool HasSelectedCourse => SelectedCourse != null;
         public bool IsCoursesEmpty => !HasCourses;
         public bool IsProgressEmpty => !HasProgressItems;
         public bool IsCertificatesEmpty => !HasCertificates;
@@ -178,7 +177,7 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
-        // Свойства для выбранного курса, модуля и урока
+        // Свойства для выбранного курса и урока
         public Course? SelectedCourse
         {
             get => _selectedCourse;
@@ -188,22 +187,10 @@ namespace EducationalPlatformDesktop.ViewModels
                 {
                     _selectedCourse = value;
                     OnPropertyChanged();
-                    UpdateModulesForSelectedCourse();
+                    OnPropertyChanged(nameof(HasSelectedCourse));
+                    UpdateLessonsForSelectedCourse();
                     OpenTestCommand.RaiseCanExecuteChanged();
                     OnPropertyChanged(nameof(TestAvailabilityMessage));
-                }
-            }
-        }
-        public Module? SelectedModule
-        {
-            get => _selectedModule;
-            set
-            {
-                if (_selectedModule != value)
-                {
-                    _selectedModule = value;
-                    OnPropertyChanged();
-                    UpdateLessonsForSelectedModule();
                 }
             }
         }
@@ -443,13 +430,10 @@ namespace EducationalPlatformDesktop.ViewModels
           //потому что серверный контракт пока не возвращает полную оценку попытки в пригодном для восстановления виде
 
         //Обновление курса при смене выбора
-        private void UpdateModulesForSelectedCourse()
+        private void UpdateLessonsForSelectedCourse()
         {
-            Modules.Clear();
             Lessons.Clear();
-            _selectedModule = null;
             _selectedLesson = null;
-            OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(SelectedLesson));
             LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
             if (SelectedCourse == null)
@@ -459,21 +443,6 @@ namespace EducationalPlatformDesktop.ViewModels
             _ = LoadLessonsForSelectedCourseAsync();
         }
 
-        //Обновление уроков выбранного модуля
-        private void UpdateLessonsForSelectedModule()
-        {
-            Lessons.Clear();
-            _selectedLesson = null;
-            OnPropertyChanged(nameof(SelectedLesson));
-            LessonContent = "Выберите урок, чтобы увидеть текст лекции.";
-            if (SelectedModule == null)
-                return;
-            foreach (var lesson in SelectedModule.Lessons)
-                Lessons.Add(lesson);
-            OnPropertyChanged(nameof(HasNextLesson));
-            OnPropertyChanged(nameof(NextLessonButtonText));
-            OpenNextLessonCommand.RaiseCanExecuteChanged();
-        }
         private void UpdateLessonContent()
         {
             LessonContent = SelectedLesson?.Content ?? "Выберите урок, чтобы увидеть текст лекции.";
@@ -482,8 +451,7 @@ namespace EducationalPlatformDesktop.ViewModels
             OpenNextLessonCommand.RaiseCanExecuteChanged();
         }
 
-        //Навигация по урокам реализована через текущую плоскую коллекцию уроков активного модуля,
-        //без дополнительных структур.
+        //Навигация по урокам реализована через текущую коллекцию уроков выбранного курса.
         private Lesson? GetNextLesson()
         {
             if (SelectedLesson == null || Lessons.Count == 0)
@@ -509,10 +477,8 @@ namespace EducationalPlatformDesktop.ViewModels
             }
             else
             {
-                Modules.Clear();
                 Lessons.Clear();
                 SelectedCourse = null;
-                SelectedModule = null;
                 SelectedLesson = null;
                 LessonContent = "Курсы не найдены.";
                 ApiStatusMessage = "Курсы не найдены.";
@@ -564,73 +530,67 @@ namespace EducationalPlatformDesktop.ViewModels
             try
             {
                 var lessonDtos = await _apiClient.GetLessonsByCourseIdAsync(course.Id);
-                var module = new Module
-                {
-                    Id = course.Id,
-                    CourseId = course.Id,
-                    Title = "Лекции курса"
-                };
+                var lessons = new List<Lesson>();
                 foreach (var dto in lessonDtos)
                 {
-                    module.Lessons.Add(MapLesson(dto));
+                    lessons.Add(MapLesson(dto));
                 }
-                ApplyProgressToModule(course, module);
-                _lessonModuleCacheByCourse[course.Id] = module;
-                ShowModuleForCourse(course, module);
+                ApplyProgressToLessons(course, lessons);
+                _lessonCacheByCourse[course.Id] = lessons;
+                ShowLessonsForCourse(course, lessons);
             }
             catch
             {
-                if (_lessonModuleCacheByCourse.TryGetValue(course.Id, out var cachedModule))
+                if (_lessonCacheByCourse.TryGetValue(course.Id, out var cachedLessons))
                 {
-                    ShowModuleForCourse(course, cachedModule);
+                    ShowLessonsForCourse(course, cachedLessons);
                     ApiStatusMessage =
                         "Не удалось обновить данные из API. Показаны ранее загруженные уроки курса.";
                     HasApiStatusMessage = true;
                     return;
                 }
 
-                Modules.Clear();
                 Lessons.Clear();
-                SelectedModule = null;
                 SelectedLesson = null;
                 LessonContent = "Не удалось загрузить лекции курса.";
             }
         }
-        //Backend API возвращает уроки в разрезе курса, без отдельной сущности модулей в контракте, поэтому на клиенте используется упрощенное представление: все лекции курса объединяются в один модуль.
-        //Это решение позволяет сохранить понятную структуру интерфейса без искусственного усложнения
+        //Backend API возвращает уроки в разрезе курса, поэтому клиент напрямую работает со списком уроков курса.
 
         //Применение серверного прогресса к урокам
-        private static void ApplyUserCourseProgress(Module module, int progressPercent)
+        private static void ApplyUserCourseProgress(IReadOnlyList<Lesson> lessons, int progressPercent)
         {
-            if (module.Lessons.Count == 0)
+            if (lessons.Count == 0)
             {
                 return;
             }
             var completedCount = (int)Math.Round(
-                module.Lessons.Count * progressPercent / 100.0);
-            foreach (var lesson in module.Lessons.Take(completedCount))
+                lessons.Count * progressPercent / 100.0);
+            foreach (var lesson in lessons.Take(completedCount))
             {
                 lesson.IsCompleted = true;
             }
         }
 
-        private void ApplyProgressToModule(Course course, Module module)
+        private void ApplyProgressToLessons(Course course, IEnumerable<Lesson> lessons)
         {
-            foreach (var lesson in module.Lessons)
+            var lessonList = lessons.ToList();
+
+            foreach (var lesson in lessonList)
             {
                 lesson.IsCompleted = false;
             }
 
             if (_userCourseStates.TryGetValue(course.Id, out var userCourse))
             {
-                ApplyUserCourseProgress(module, userCourse.Progress);
+                ApplyUserCourseProgress(lessonList, userCourse.Progress);
                 course.IsPurchased = true;
                 course.RefreshProgress();
             }
 
             if (_completedLessonsByCourse.TryGetValue(course.Id, out var completedLessons))
             {
-                foreach (var lesson in module.Lessons.Where(
+                foreach (var lesson in lessonList.Where(
                              lesson => completedLessons.Contains(lesson.Id)))
                 {
                     lesson.IsCompleted = true;
@@ -641,19 +601,22 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
-        private void ShowModuleForCourse(Course course, Module module)
+        private void ShowLessonsForCourse(Course course, IEnumerable<Lesson> lessons)
         {
-            course.Modules.Clear();
-            course.Modules.Add(module);
+            var lessonList = lessons.ToList();
 
-            Modules.Clear();
-            Modules.Add(module);
+            course.Lessons.Clear();
+            Lessons.Clear();
 
-            SelectedModule = module;
-
-            if (module.Lessons.Count > 0)
+            foreach (var lesson in lessonList)
             {
-                SelectedLesson = module.Lessons.First();
+                course.Lessons.Add(lesson);
+                Lessons.Add(lesson);
+            }
+
+            if (lessonList.Count > 0)
+            {
+                SelectedLesson = lessonList.First();
             }
             else
             {
@@ -725,6 +688,7 @@ namespace EducationalPlatformDesktop.ViewModels
         private void NotifyCourseSummaryChanged()
         {
             OnPropertyChanged(nameof(HasCourses));
+            OnPropertyChanged(nameof(HasSelectedCourse));
             OnPropertyChanged(nameof(IsCoursesEmpty));
             OnPropertyChanged(nameof(ActiveCoursesCount));
             OnPropertyChanged(nameof(LessonsCompletedCount));

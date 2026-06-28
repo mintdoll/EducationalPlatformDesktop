@@ -100,109 +100,131 @@
                            Foreground="{StaticResource TextPrimaryBrush}"
                            Margin="4,0,0,16" />
 
-                <ListBox ItemsSource="{Binding Courses}"
-                         SelectedItem="{Binding SelectedCourse}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ItemContainerStyle="{StaticResource SelectableCardItemStyle}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="{StaticResource CardBackgroundBrush}"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="16"
-                                    Padding="16">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
+                <Grid>
+                    <ListBox ItemsSource="{Binding Courses}"
+                             SelectedItem="{Binding SelectedCourse}"
+                             Visibility="{Binding HasCourses, Converter={StaticResource BoolToVis}}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ItemContainerStyle="{StaticResource SelectableCardItemStyle}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource CardBackgroundBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="16"
+                                        Padding="16">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontSize="18"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                                   TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       TextWrapping="Wrap" />
 
-                                        <StackPanel Grid.Column="1"
-                                                    HorizontalAlignment="Right">
-                                            <TextBlock Text="Куплен"
-                                                       FontSize="12"
-                                                       Foreground="{StaticResource AccentBrush}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsPurchased}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                            <StackPanel Grid.Column="1"
+                                                        HorizontalAlignment="Right">
+                                                <TextBlock Text="Куплен"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource AccentBrush}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsPurchased}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
 
-                                            <TextBlock Text="Доступен"
-                                                       FontSize="12"
-                                                       Foreground="{StaticResource TextMutedBrush}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsPurchased}" Value="False">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </Grid>
+                                                <TextBlock Text="Доступен"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource TextMutedBrush}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsPurchased}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
 
-                                    <TextBlock Text="{Binding Track}"
-                                               FontSize="12"
-                                               Foreground="{StaticResource AccentBrush}" />
+                                        <TextBlock Text="{Binding Track}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource AccentBrush}" />
 
-                                    <TextBlock Text="{Binding Teacher, StringFormat=Преподаватель: {0}}"
-                                               FontSize="13"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Margin="0,8,0,0" />
+                                        <TextBlock Text="{Binding Teacher, StringFormat=Преподаватель: {0}}"
+                                                   FontSize="13"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,8,0,0" />
 
-                                    <TextBlock Text="{Binding Description}"
-                                               FontSize="13"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               TextWrapping="Wrap"
-                                               Margin="0,8,0,0" />
-                                    <Grid Margin="0,14,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Description}"
+                                                   FontSize="13"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,8,0,0" />
+                                        <Grid Margin="0,14,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="{Binding Status}"
-               FontSize="12"
-               FontWeight="SemiBold"
-               Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Text="{Binding Status}"
+                   FontSize="12"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource AccentBrush}" />
 
-                                        <TextBlock Grid.Column="1"
-               Text="{Binding Progress, StringFormat={}{0}%}"
-               FontSize="12"
-               Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </Grid>
+                                            <TextBlock Grid.Column="1"
+                   Text="{Binding Progress, StringFormat={}{0}%}"
+                   FontSize="12"
+                   Foreground="{StaticResource TextSecondaryBrush}" />
+                                        </Grid>
 
-                                    <ProgressBar Height="6"
-             Margin="0,8,0,0"
-             Maximum="100"
-             Value="{Binding Progress, Mode=OneWay}"
-             Foreground="{StaticResource AccentBrush}"
-             Background="{StaticResource SecondaryBackgroundBrush}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                                        <ProgressBar Height="6"
+                 Margin="0,8,0,0"
+                 Maximum="100"
+                 Value="{Binding Progress, Mode=OneWay}"
+                 Foreground="{StaticResource AccentBrush}"
+                 Background="{StaticResource SecondaryBackgroundBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Visibility="{Binding IsCoursesEmpty, Converter={StaticResource BoolToVis}}"
+                            Background="{StaticResource CardBackgroundBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="Нет доступных курсов"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="После покупки или назначения курса он появится в этом разделе."
+                                       Margin="0,10,0,0"
+                                       FontSize="14"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </DockPanel>
         </Border>
 
@@ -211,7 +233,8 @@
                       Margin="12,24,24,24"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
-            <StackPanel>
+            <Grid>
+                <StackPanel Visibility="{Binding HasSelectedCourse, Converter={StaticResource BoolToVis}}">
 
                 <Border Background="{StaticResource CardBackgroundBrush}"
                         BorderBrush="{StaticResource CardBorderBrush}"
@@ -329,7 +352,27 @@
                     </StackPanel>
                 </Border>
 
-            </StackPanel>
+                </StackPanel>
+
+                <Border Visibility="{Binding HasSelectedCourse, Converter={StaticResource InverseBoolToVis}}"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="22"
+                        Padding="24">
+                    <StackPanel>
+                        <TextBlock Text="Курс не выбран"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Когда у пользователя появятся доступные курсы, здесь отобразятся описание, уроки и итоговый тест."
+                                   Margin="0,10,0,0"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

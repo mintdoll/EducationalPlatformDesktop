@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace EducationalPlatformDesktop.Models
@@ -39,7 +38,7 @@ namespace EducationalPlatformDesktop.Models
 
         public int PassingScore { get; set; } = 70;
 
-        public ObservableCollection<Module> Modules { get; set; } = new();
+        public ObservableCollection<Lesson> Lessons { get; set; } = new();
 
         public int BestTestScore
         {
@@ -56,12 +55,10 @@ namespace EducationalPlatformDesktop.Models
             }
         }
 
-        public int TotalLessons =>
-            Modules.Sum(module => module.Lessons.Count);
+        public int TotalLessons => Lessons.Count;
 
         public int CompletedLessons =>
-            Modules.Sum(module =>
-                module.Lessons.Count(lesson => lesson.IsCompleted));
+            Lessons.Count(lesson => lesson.IsCompleted);
 
        
 
