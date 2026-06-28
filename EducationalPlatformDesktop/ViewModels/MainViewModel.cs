@@ -32,6 +32,7 @@ namespace EducationalPlatformDesktop.ViewModels
         private readonly Dictionary<int, UserCourseDto> _userCourseStates = new();
         private readonly Dictionary<int, HashSet<int>> _completedLessonsByCourse = new();
         private readonly Dictionary<int, int> _bestTestScoreByCourse = new();
+        private readonly Dictionary<int, Module> _lessonModuleCacheByCourse = new();
         //Часть состояния пока хранится локально в ViewModel, потому что API сервера не предоставляет endpoint’ов и структур для сохранения
         //прогресса по каждому уроку и точного результата теста. Поэтому клиент вынужден временно кэшировать эти данные в памяти текущей сессии
 
@@ -315,7 +316,7 @@ namespace EducationalPlatformDesktop.ViewModels
         {
             CurrentView = _coursesView;
             PageTitle = "Курсы";
-            PageDescription = "Просмотр курсов, модулей и уроков.";
+            PageDescription = "Просмотр курсов и уроков.";
         }
         private void ShowProfile()
         {
@@ -348,7 +349,7 @@ namespace EducationalPlatformDesktop.ViewModels
             CurrentView = _lessonView;
             PageTitle = lesson.Title;
             PageDescription = SelectedCourse != null
-                ? $"{SelectedCourse.Title} · {SelectedModule?.Title}"
+                ? SelectedCourse.Title
                 : "Текст лекции";
         }
 
@@ -399,7 +400,7 @@ namespace EducationalPlatformDesktop.ViewModels
             test.Title = testsResult.Data[0].Name;
 
             _testViewModel = new TestViewModel(test);
-            _testViewModel.TestCompleted += OnTestCompleted;
+            _testViewModel.TestCompleted += result => _ = HandleTestCompletedAsync(result);
 
             _testViewModel.BackRequested += ShowCourses;
 
@@ -414,7 +415,7 @@ namespace EducationalPlatformDesktop.ViewModels
           //Поэтому клиентская часть использует серверный факт наличия теста и его название, а содержимое теста временно загружает из локальных мок-данных
 
         //Завершение теста
-        private async void OnTestCompleted(TestResult result)
+        private async Task HandleTestCompletedAsync(TestResult result)
         {
             var course = Courses.FirstOrDefault(
                 item => item.Id == result.CourseId);
@@ -432,7 +433,7 @@ namespace EducationalPlatformDesktop.ViewModels
             _testResultViewModel = new TestResultViewModel(
                 result,
                 course.CanReceiveCertificate);
-            _testResultViewModel.RetryRequested += RetryCurrentTest;
+            _testResultViewModel.RetryRequested += () => _ = RetryCurrentTestAsync();
             _testResultViewModel.BackToCoursesRequested += ShowCourses;
             _testResultView.DataContext = _testResultViewModel;
             CurrentView = _testResultView;
@@ -573,39 +574,21 @@ namespace EducationalPlatformDesktop.ViewModels
                 {
                     module.Lessons.Add(MapLesson(dto));
                 }
-                course.Modules.Clear();
-                course.Modules.Add(module);
-                Modules.Clear();
-                Modules.Add(module);
-                if (_userCourseStates.TryGetValue(course.Id, out var userCourse))
-                {
-                    ApplyUserCourseProgress(module, userCourse.Progress);
-                    course.IsPurchased = true;
-                    course.RefreshProgress();
-                }
-                if (_completedLessonsByCourse.TryGetValue(course.Id, out var completedLessons))
-                {
-                    foreach (var lesson in module.Lessons.Where(
-                                 lesson => completedLessons.Contains(lesson.Id)))
-                    {
-                        lesson.IsCompleted = true;
-                    }
-                    course.SetProgressOverride(null);
-                    course.RefreshProgress();
-                }
-                SelectedModule = module;
-                if (module.Lessons.Count > 0)
-                {
-                    SelectedLesson = module.Lessons.First();
-                }
-                else
-                {
-                    SelectedLesson = null;
-                    LessonContent = "Для этого курса пока нет лекций.";
-                }
+                ApplyProgressToModule(course, module);
+                _lessonModuleCacheByCourse[course.Id] = module;
+                ShowModuleForCourse(course, module);
             }
             catch
             {
+                if (_lessonModuleCacheByCourse.TryGetValue(course.Id, out var cachedModule))
+                {
+                    ShowModuleForCourse(course, cachedModule);
+                    ApiStatusMessage =
+                        "Не удалось обновить данные из API. Показаны ранее загруженные уроки курса.";
+                    HasApiStatusMessage = true;
+                    return;
+                }
+
                 Modules.Clear();
                 Lessons.Clear();
                 SelectedModule = null;
@@ -630,9 +613,58 @@ namespace EducationalPlatformDesktop.ViewModels
                 lesson.IsCompleted = true;
             }
         }
+
+        private void ApplyProgressToModule(Course course, Module module)
+        {
+            foreach (var lesson in module.Lessons)
+            {
+                lesson.IsCompleted = false;
+            }
+
+            if (_userCourseStates.TryGetValue(course.Id, out var userCourse))
+            {
+                ApplyUserCourseProgress(module, userCourse.Progress);
+                course.IsPurchased = true;
+                course.RefreshProgress();
+            }
+
+            if (_completedLessonsByCourse.TryGetValue(course.Id, out var completedLessons))
+            {
+                foreach (var lesson in module.Lessons.Where(
+                             lesson => completedLessons.Contains(lesson.Id)))
+                {
+                    lesson.IsCompleted = true;
+                }
+
+                course.SetProgressOverride(null);
+                course.RefreshProgress();
+            }
+        }
+
+        private void ShowModuleForCourse(Course course, Module module)
+        {
+            course.Modules.Clear();
+            course.Modules.Add(module);
+
+            Modules.Clear();
+            Modules.Add(module);
+
+            SelectedModule = module;
+
+            if (module.Lessons.Count > 0)
+            {
+                SelectedLesson = module.Lessons.First();
+            }
+            else
+            {
+                SelectedLesson = null;
+                LessonContent = "Для этого курса пока нет лекций.";
+            }
+        }
         //Поскольку API хранит агрегированный процент прохождения курса, а не список конкретных завершенных уроков, клиент реконструирует прогресс приближенно, помечая завершенными первые уроки в количестве, соответствующем серверному проценту.
         //Для точного восстановления нужен отдельный endpoint или структура хранения прогресса по урокам
 
+        //Маппинг DTO в клиентские модели
         private static Course MapCourse(CourseDto dto)
         {
             return new Course
@@ -652,7 +684,6 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 Id = dto.Id,
                 CourseId = dto.CourseId,
-                ModuleId = dto.CourseId,
                 Title = dto.Name ?? string.Empty,
                 Description = dto.Description ?? string.Empty,
                 Content = !string.IsNullOrWhiteSpace(dto.Content)
@@ -669,28 +700,28 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 return 5;
             }
-
             return Math.Max(5, (int)Math.Ceiling(content.Length / 240.0) * 5);
         }
+        //Длительность урока вычисляется локально, потому что API не предоставляет длительность в явном виде,
+        //поэтому клиент вычисляет приблизительное значение для интерфейса
 
+        //Формирование профиля из сессии: профиль в текущей версии не загружается отдельным API-запросом, а собирается из данных авторизации.
         private static UserProfile CreateProfileFromSession()
         {
             var fullName = AppSession.FullName;
-
             if (string.IsNullOrWhiteSpace(fullName))
             {
                 fullName = "Студент";
             }
-
             return new UserProfile
             {
                 FullName = fullName,
                 EmailOrMax = AppSession.Email ?? string.Empty,
-                Group = AppSession.Role ?? "student",
                 Role = AppSession.Role ?? "student"
             };
         }
 
+        //Методы уведомления о пересчете сводных данных
         private void NotifyCourseSummaryChanged()
         {
             OnPropertyChanged(nameof(HasCourses));
@@ -699,13 +730,14 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(LessonsCompletedCount));
             OpenTestCommand.RaiseCanExecuteChanged();
         }
+
+        //Завершение урока
         private void CompleteLesson(Lesson? lesson)
         {
             if (lesson == null || lesson.IsCompleted)
             {
                 return;
             }
-
             lesson.IsCompleted = true;
 
             if (!_completedLessonsByCourse.TryGetValue(lesson.CourseId, out var completedLessons))
@@ -713,9 +745,7 @@ namespace EducationalPlatformDesktop.ViewModels
                 completedLessons = new HashSet<int>();
                 _completedLessonsByCourse[lesson.CourseId] = completedLessons;
             }
-
             completedLessons.Add(lesson.Id);
-
             var course = Courses.FirstOrDefault(
                 item => item.Id == lesson.CourseId);
 
@@ -723,16 +753,13 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 return;
             }
-
             course.SetProgressOverride(null);
             course.RefreshProgress();
-
             UpdateProgressForCourse(course);
             NotifyProgressSummaryChanged();
             OpenTestCommand.RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(TestAvailabilityMessage));
         }
-
         private void UpdateProgressForCourse(Course course)
         {
             UpdateProgressForCourse(CreateProgressItem(course));
@@ -744,52 +771,50 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(CompletedCoursesCount));
             OnPropertyChanged(nameof(AverageProgress));
             OpenTestCommand.RaiseCanExecuteChanged();
-
             OnPropertyChanged(nameof(HasCourses));
             OnPropertyChanged(nameof(HasProgressItems));
             OnPropertyChanged(nameof(HasCertificates));
-
             OnPropertyChanged(nameof(IsCoursesEmpty));
             OnPropertyChanged(nameof(IsProgressEmpty));
             OnPropertyChanged(nameof(IsCertificatesEmpty));
         }
-        private async void RetryCurrentTest()
+        //Отметка урока как пройденного в текущей реализации обновляет локальное состояние клиента и интерфейса, но не отправляется на сервер,
+        //так как серверный API не содержит отдельного механизма фиксации прохождения уроков поштучно
+
+        //Повтор теста
+        private async Task RetryCurrentTestAsync()
         {
             if (_activeTestCourseId == null)
             {
                 return;
             }
-
             SelectedCourse = Courses.FirstOrDefault(
                 course => course.Id == _activeTestCourseId.Value);
-
             await OpenTestAsync();
         }
+
+        //Загрузка пользовательского прогресса из API
         private async Task LoadUserProgressFromApiAsync()
         {
             if (AppSession.UserId == null ||
                 string.IsNullOrWhiteSpace(AppSession.Token))
             {
                 ApiStatusMessage =
-                    "API-режим недоступен: пользователь не авторизован. Используются локальные данные.";
+                    "Пользователь не авторизован. Данные API недоступны.";
                 HasApiStatusMessage = true;
                 return;
             }
-
             try
             {
                 var result = await _apiClient.GetUserCoursesAsync(
                     AppSession.UserId.Value);
-
                 if (!result.IsSuccess)
                 {
                     ApiStatusMessage = result.Message;
                     HasApiStatusMessage = true;
                     return;
                 }
-
                 _userCourseStates.Clear();
-
                 if (result.Data == null || result.Data.Count == 0)
                 {
                     Courses.Clear();
@@ -803,19 +828,15 @@ namespace EducationalPlatformDesktop.ViewModels
                     NotifyProgressSummaryChanged();
                     return;
                 }
-
                 ApiStatusMessage = string.Empty;
                 HasApiStatusMessage = false;
                 Certificates.Clear();
-
                 var allowedCourseIds = result.Data
                     .Select(item => item.CourseId)
                     .ToHashSet();
-
                 var visibleCourses = Courses
                     .Where(course => allowedCourseIds.Contains(course.Id))
                     .ToList();
-
                 Courses.Clear();
                 foreach (var course in visibleCourses)
                 {
@@ -824,34 +845,26 @@ namespace EducationalPlatformDesktop.ViewModels
                     course.RefreshProgress();
                     Courses.Add(course);
                 }
-
                 ProgressItems.Clear();
-
                 foreach (var userCourse in result.Data)
                 {
                     _userCourseStates[userCourse.CourseId] = userCourse;
-
                     var course = Courses.FirstOrDefault(
                         item => item.Id == userCourse.CourseId);
-
                     if (course == null)
                     {
                         continue;
                     }
-
                     course.IsPurchased = true;
                     course.SetProgressOverride(userCourse.Progress);
-
                     if (_bestTestScoreByCourse.TryGetValue(course.Id, out var cachedScore))
                     {
                         course.BestTestScore = cachedScore;
                     }
-
                     var lessonCount = await TryGetLessonCountAsync(course.Id);
                     var completedLessons = lessonCount == 0
                         ? 0
                         : (int)Math.Round(lessonCount * userCourse.Progress / 100.0);
-
                     UpdateProgressForCourse(new Progress
                     {
                         CourseId = course.Id,
@@ -863,12 +876,10 @@ namespace EducationalPlatformDesktop.ViewModels
                         IsCompleted = userCourse.Completed
                     });
                 }
-
                 await LoadCertificatesFromApiAsync(
                     result.Data
                         .Where(item => item.Completed)
                         .Select(item => item.CourseId));
-
                 NotifyCourseSummaryChanged();
                 NotifyProgressSummaryChanged();
                 OnPropertyChanged(nameof(CertificatesCount));
@@ -878,11 +889,12 @@ namespace EducationalPlatformDesktop.ViewModels
             catch
             {
                 ApiStatusMessage =
-                    "Не удалось подключиться к API. Сейчас используются локальные данные.";
+                    "Не удалось подключиться к API.";
                 HasApiStatusMessage = true;
             }
         }
 
+        //Создание объекта прогресса
         private static Progress CreateProgressItem(Course course)
         {
             return new Progress
@@ -896,7 +908,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 IsCompleted = course.IsCourseCompleted
             };
         }
-
         private void UpdateProgressForCourse(Progress item)
         {
             var oldItem = ProgressItems.FirstOrDefault(
@@ -912,6 +923,7 @@ namespace EducationalPlatformDesktop.ViewModels
             ProgressItems[index] = item;
         }
 
+        //Подсчет числа уроков через API. Метод защищен, если backend недоступен, приложение не падает.
         private async Task<int> TryGetLessonCountAsync(int courseId)
         {
             try
@@ -925,6 +937,8 @@ namespace EducationalPlatformDesktop.ViewModels
             }
         }
 
+        //Загрузка сертификатов из API.ет единого endpoint списка сертификатов пользователя.
+        //Поэтому клиент вынужден запрашивать сертификат по каждому курсу отдельно.
         private async Task LoadCertificatesFromApiAsync(IEnumerable<int> completedCourseIds)
         {
             if (AppSession.UserId == null ||
@@ -932,7 +946,6 @@ namespace EducationalPlatformDesktop.ViewModels
             {
                 return;
             }
-
             foreach (var courseId in completedCourseIds.Distinct())
             {
                 try
@@ -945,7 +958,6 @@ namespace EducationalPlatformDesktop.ViewModels
                     {
                         continue;
                     }
-
                     var certificate = new Certificate
                     {
                         Id = Guid.NewGuid().ToString("N"),
@@ -954,20 +966,16 @@ namespace EducationalPlatformDesktop.ViewModels
                         CourseName = response.Data.CourseName,
                         StudentName = response.Data.FullName,
                         IssuedAt = response.Data.IssueDate,
-                        // The API does not expose the exact test score, only completion state.
+                        // API не предоставляет точную оценку теста, только состояние завершения.
                         Score = 100
                     };
-
                     Certificates.Add(certificate);
-
                     var course = Courses.FirstOrDefault(item => item.Id == courseId);
                     if (course != null)
                     {
                         course.BestTestScore = Math.Max(course.BestTestScore, certificate.Score);
-
                         var progressItem = ProgressItems.FirstOrDefault(
                             item => item.CourseId == courseId);
-
                         if (progressItem != null)
                         {
                             progressItem.TestScore = course.BestTestScore;
@@ -978,11 +986,12 @@ namespace EducationalPlatformDesktop.ViewModels
                 }
                 catch
                 {
-                    // Ignore a single certificate load failure so the rest of the page still renders.
+                    // Игнорируем сбой загрузки одного сертификата, чтобы остальная часть страницы по-прежнему отображалась.
                 }
             }
         }
 
+        //Отправка завершения теста на сервер
         private async Task<int?> FinishTestOnApiAsync(int courseId)
         {
             if (AppSession.UserId == null ||
@@ -993,7 +1002,6 @@ namespace EducationalPlatformDesktop.ViewModels
                 HasApiStatusMessage = true;
                 return null;
             }
-
             try
             {
                 var result = await _apiClient.FinishTestAsync(
@@ -1002,17 +1010,14 @@ namespace EducationalPlatformDesktop.ViewModels
                         UserId = AppSession.UserId.Value,
                         CourseId = courseId
                     });
-
                 if (!result.IsSuccess)
                 {
                     ApiStatusMessage = result.Message;
                     HasApiStatusMessage = true;
                     return null;
                 }
-
                 ApiStatusMessage = string.Empty;
                 HasApiStatusMessage = false;
-
                 return result.Data?.Score;
             }
             catch
@@ -1022,7 +1027,10 @@ namespace EducationalPlatformDesktop.ViewModels
                 HasApiStatusMessage = true;
                 return null;
             }
-        }
+        } //по backend этот endpoint в основном фиксирует завершение курса, а не хранит полноценную историю результатов.
+          //Поэтому это не полноценное серверное сохранение тестовой попытки.
+
+        //Генерация сертификата при успешном завершении курса
         private async Task GenerateCertificateIfEligibleAsync(
      Course course,
      TestResult result)
@@ -1078,6 +1086,8 @@ namespace EducationalPlatformDesktop.ViewModels
             OnPropertyChanged(nameof(IsCertificatesEmpty));
         }
 
+        //Получение сертификата из API. сертификат в WPF сейчас не “загружается как готовый документ”.
+        //Он формируется как экран по данным.
         private async Task<Certificate?> TryGetCertificateFromApiAsync(
     int courseId,
     TestResult result)
