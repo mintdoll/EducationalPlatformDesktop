@@ -9,14 +9,14 @@ namespace EducationalPlatformDesktop.Mocks
         {
             return courseId switch
             {
-                1 => CreatePythonTest(),
-                2 => CreateAccountingTest(),
-                3 => CreateLogisticsTest(),
+                1 => CreateWebDevelopmentTest(),
+                2 => CreatePythonTest(),
+                3 => CreateFigmaTest(),
                 _ => CreateGenericTest(courseId)
             };
         }
 
-        private static Test CreatePythonTest()
+        private static Test CreateWebDevelopmentTest()
         {
             const int testId = 101;
 
@@ -24,42 +24,42 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 Id = testId,
                 CourseId = 1,
-                Title = "Итоговый тест · Python для начинающих",
+                Title = "Итоговый тест · Веб-разработка с нуля",
                 PassingScore = 70,
                 Questions = new ObservableCollection<Question>
                 {
                     CreateQuestion(
                         id: 1001,
                         testId: testId,
-                        text: "Для чего в Python используются переменные?",
+                        text: "Какой тег HTML используется для создания гиперссылки?",
                         correctIndex: 1,
-                        "Для оформления комментариев",
-                        "Для хранения данных",
-                        "Только для вывода текста",
-                        "Для установки Python"),
+                        "<link>",
+                        "<a>",
+                        "<href>",
+                        "<url>"),
                     CreateQuestion(
                         id: 1002,
                         testId: testId,
-                        text: "Какой тип данных хранит целые числа?",
+                        text: "Что означает аббревиатура CSS?",
                         correctIndex: 2,
-                        "str",
-                        "bool",
-                        "int",
-                        "float"),
+                        "Computer Style Sheets",
+                        "Creative Style System",
+                        "Cascading Style Sheets",
+                        "Coded Styling Syntax"),
                     CreateQuestion(
                         id: 1003,
                         testId: testId,
-                        text: "Что делает оператор if?",
-                        correctIndex: 2,
-                        "Повторяет код бесконечно",
-                        "Создаёт новую функцию",
-                        "Проверяет условие",
-                        "Завершает программу")
+                        text: "Какой HTTP-метод используется для отправки данных формы на сервер?",
+                        correctIndex: 1,
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE")
                 }
             };
         }
 
-        private static Test CreateAccountingTest()
+        private static Test CreatePythonTest()
         {
             const int testId = 102;
 
@@ -67,42 +67,42 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 Id = testId,
                 CourseId = 2,
-                Title = "Итоговый тест · Бухгалтерский учёт",
+                Title = "Итоговый тест · Основы Python",
                 PassingScore = 70,
                 Questions = new ObservableCollection<Question>
                 {
                     CreateQuestion(
                         id: 2001,
                         testId: testId,
-                        text: "Для чего нужен бухгалтерский учёт?",
-                        correctIndex: 1,
-                        "Только для расчёта зарплаты",
-                        "Для регистрации и обобщения информации о деятельности организации",
-                        "Только для хранения договоров",
-                        "Для создания рекламы"),
+                        text: "Как объявить функцию в Python?",
+                        correctIndex: 2,
+                        "function my_func():",
+                        "func my_func():",
+                        "def my_func():",
+                        "define my_func():"),
                     CreateQuestion(
                         id: 2002,
                         testId: testId,
-                        text: "Что подтверждает хозяйственную операцию?",
-                        correctIndex: 2,
-                        "Устная договорённость",
-                        "Рекламное объявление",
-                        "Первичный документ",
-                        "Рабочий график"),
+                        text: "Какой тип данных используется для хранения пар «ключ — значение» в Python?",
+                        correctIndex: 3,
+                        "list",
+                        "tuple",
+                        "set",
+                        "dict"),
                     CreateQuestion(
                         id: 2003,
                         testId: testId,
-                        text: "Какие элементы используются в бухгалтерской проводке?",
-                        correctIndex: 0,
-                        "Дебет и кредит",
-                        "Доход и реклама",
-                        "Склад и доставка",
-                        "План и отчёт")
+                        text: "Какой оператор проверяет принадлежность элемента коллекции?",
+                        correctIndex: 2,
+                        "contains",
+                        "has",
+                        "in",
+                        "includes")
                 }
             };
         }
 
-        private static Test CreateLogisticsTest()
+        private static Test CreateFigmaTest()
         {
             const int testId = 103;
 
@@ -110,37 +110,37 @@ namespace EducationalPlatformDesktop.Mocks
             {
                 Id = testId,
                 CourseId = 3,
-                Title = "Итоговый тест · Логистика и закупки",
+                Title = "Итоговый тест · Дизайн интерфейсов в Figma",
                 PassingScore = 70,
                 Questions = new ObservableCollection<Question>
                 {
                     CreateQuestion(
                         id: 3001,
                         testId: testId,
-                        text: "Что изучает логистика?",
+                        text: "Что такое компонент (Component) в Figma?",
                         correctIndex: 1,
-                        "Только бухгалтерские документы",
-                        "Движение товаров, информации и ресурсов",
-                        "Только работу персонала",
-                        "Разработку программ"),
+                        "Слой с примененным эффектом",
+                        "Переиспользуемый элемент интерфейса, изменения в котором применяются ко всем копиям",
+                        "Группа слоев без особых свойств",
+                        "Шаблон страницы"),
                     CreateQuestion(
                         id: 3002,
                         testId: testId,
-                        text: "Зачем необходимо планирование закупок?",
+                        text: "Для чего используется Auto Layout?",
                         correctIndex: 2,
-                        "Для увеличения количества документов",
-                        "Для изменения названия организации",
-                        "Для предотвращения дефицита и излишков",
-                        "Только для выбора транспорта"),
+                        "Для автоматической генерации цветовой палитры",
+                        "Для создания анимации между экранами",
+                        "Для адаптивного выравнивания элементов с автоматическими отступами",
+                        "Для экспорта макета в код"),
                     CreateQuestion(
                         id: 3003,
                         testId: testId,
-                        text: "Что учитывают при выборе поставщика?",
-                        correctIndex: 3,
-                        "Только название компании",
-                        "Только адрес офиса",
-                        "Только количество сотрудников",
-                        "Цену, сроки и качество поставки")
+                        text: "Как называется копия компонента, размещенная на макете?",
+                        correctIndex: 2,
+                        "Clone",
+                        "Symbol",
+                        "Instance",
+                        "Draft")
                 }
             };
         }

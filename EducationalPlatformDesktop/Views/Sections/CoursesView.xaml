@@ -206,7 +206,7 @@
             </DockPanel>
         </Border>
 
-        <!-- Модули и уроки -->
+        <!-- Курс и уроки -->
         <ScrollViewer Grid.Column="1"
                       Margin="12,24,24,24"
                       VerticalScrollBarVisibility="Auto"
@@ -249,49 +249,6 @@
                         CornerRadius="22"
                         Padding="20"
                         Margin="0,0,0,16">
-                    <StackPanel>
-                        <TextBlock Text="Модули"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   Margin="0,0,0,14" />
-
-                        <ListBox ItemsSource="{Binding Modules}"
-                                 SelectedItem="{Binding SelectedModule}"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 ItemContainerStyle="{StaticResource SelectableCardItemStyle}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#FCFBF8"
-                                            BorderBrush="{StaticResource CardBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="14"
-                                            Padding="14">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Title}"
-                                                       FontSize="16"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{StaticResource TextPrimaryBrush}" />
-                                            <TextBlock Text="{Binding Lessons.Count, StringFormat=Уроков: {0}}"
-                                                       FontSize="13"
-                                                       Foreground="{StaticResource TextMutedBrush}"
-                                                       Margin="0,6,0,0" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="{StaticResource CardBackgroundBrush}"
-                        BorderBrush="{StaticResource CardBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="22"
-                        Padding="20">
                     <StackPanel>
                         <TextBlock Text="Уроки"
                                    FontSize="22"

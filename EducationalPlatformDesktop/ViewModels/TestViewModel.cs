@@ -113,8 +113,7 @@ namespace EducationalPlatformDesktop.ViewModels
 
         private void Answer()
         {
-            var selectedAnswer =
-                CurrentQuestion.Options[SelectedOption];
+            var selectedAnswer = CurrentQuestion.Options[SelectedOption];
 
             if (selectedAnswer.IsCorrect)
             {

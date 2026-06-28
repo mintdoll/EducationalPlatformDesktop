@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace EducationalPlatformDesktop.Models
@@ -10,8 +10,6 @@ namespace EducationalPlatformDesktop.Models
         public int Id { get; set; }
 
         public int CourseId { get; set; }
-
-        public int ModuleId { get; set; }
 
         public string Title { get; set; } = string.Empty;
 

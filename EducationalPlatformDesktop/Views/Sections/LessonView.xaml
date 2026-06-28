@@ -70,13 +70,7 @@
                                FontSize="14"
                                Foreground="{StaticResource TextMutedBrush}"
                                TextWrapping="Wrap"
-                               Margin="0,8,0,0" />
-
-                    <TextBlock Text="{Binding SelectedModule.Title}"
-                               FontSize="14"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,20" />
+                               Margin="0,8,0,20" />
 
                     <Border Background="#FCFBF8"
                             BorderBrush="{StaticResource CardBorderBrush}"

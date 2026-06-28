@@ -2,100 +2,119 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource PageBackgroundBrush}">
-    
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="24">
-            <UniformGrid Columns="2" Margin="0,0,0,18">
+            <UniformGrid Columns="2"
+                         Margin="0,0,0,18">
                 <Border Style="{StaticResource MetricCardStyle}">
                     <StackPanel>
                         <TextBlock Text="{Binding AverageProgress, StringFormat={}{0}%}"
-                                   FontSize="28" FontWeight="SemiBold"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
                         <TextBlock Text="Средний прогресс"
-                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,6,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource MetricCardStyle}" Margin="0">
+
+                <Border Style="{StaticResource MetricCardStyle}"
+                        Margin="0">
                     <StackPanel>
                         <TextBlock Text="{Binding CompletedCoursesCount}"
-                                   FontSize="28" FontWeight="SemiBold"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
                         <TextBlock Text="Курсов завершено"
-                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,6,0,0" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
             <Border Visibility="{Binding HasApiStatusMessage, Converter={StaticResource BoolToVis}}"
-        Background="#FFF7ED"
-        BorderBrush="#FDBA74"
-        BorderThickness="1"
-        CornerRadius="12"
-        Padding="14"
-        Margin="0,0,0,16">
+                    Background="#FFF7ED"
+                    BorderBrush="#FDBA74"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="14"
+                    Margin="0,0,0,16">
                 <TextBlock Text="{Binding ApiStatusMessage}"
-               Foreground="#9A3412"
-               FontSize="14"
-               TextWrapping="Wrap" />
+                           Foreground="#9A3412"
+                           FontSize="14"
+                           TextWrapping="Wrap" />
             </Border>
 
             <Border Visibility="{Binding IsProgressEmpty, Converter={StaticResource BoolToVis}}"
-        Background="#F9FAFB"
-        BorderBrush="#E5E7EB"
-        BorderThickness="1"
-        CornerRadius="16"
-        Padding="28"
-        Margin="0,0,0,16">
+                    Background="#F9FAFB"
+                    BorderBrush="#E5E7EB"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="28"
+                    Margin="0,0,0,16">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Прогресс пока отсутствует"
-                   FontSize="20"
-                   FontWeight="SemiBold"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   TextAlignment="Center" />
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextAlignment="Center" />
 
-                    <TextBlock Text="У Вас сейчас нет доступых курсов. Как только они появятся, здесь отобразится прогресс"
-                   Margin="0,8,0,0"
-                   FontSize="14"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap" />
+                    <TextBlock Text="У вас сейчас нет доступных курсов. Когда они появятся, здесь отобразится прогресс обучения."
+                               Margin="0,8,0,0"
+                               FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
             <TextBlock Text="Прогресс по курсам"
                        Visibility="{Binding HasProgressItems, Converter={StaticResource BoolToVis}}"
                        Foreground="{StaticResource TextPrimaryBrush}"
-                       FontSize="22" FontWeight="SemiBold" Margin="0,0,0,14" />
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,14" />
 
             <ItemsControl ItemsSource="{Binding ProgressItems}"
-                       Visibility="{Binding HasProgressItems, Converter={StaticResource BoolToVis}}">
+                          Visibility="{Binding HasProgressItems, Converter={StaticResource BoolToVis}}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Background="{StaticResource CardBackgroundBrush}"
                                 BorderBrush="{StaticResource CardBorderBrush}"
-                                BorderThickness="1" CornerRadius="16"
-                                Padding="20" Margin="0,0,0,12">
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="20"
+                                Margin="0,0,0,12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="170" />
                                 </Grid.ColumnDefinitions>
+
                                 <StackPanel Margin="0,0,28,0">
                                     <TextBlock Text="{Binding CourseName}"
                                                Foreground="{StaticResource TextPrimaryBrush}"
-                                               FontSize="17" FontWeight="SemiBold" />
+                                               FontSize="17"
+                                               FontWeight="SemiBold" />
+
                                     <TextBlock Text="{Binding StatusText}"
                                                Foreground="{StaticResource TextMutedBrush}"
-                                               FontSize="12" Margin="0,5,0,14" />
-                                    <ProgressBar Height="8" Maximum="100"
+                                               FontSize="12"
+                                               Margin="0,5,0,14" />
+
+                                    <ProgressBar Height="8"
+                                                 Maximum="100"
                                                  Value="{Binding OverallPercentage, Mode=OneWay}"
                                                  Foreground="{StaticResource AccentBrush}"
                                                  Background="{StaticResource SecondaryBackgroundBrush}" />
+
                                     <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
-                                               FontSize="13" Margin="0,8,0,0">
+                                               FontSize="13"
+                                               Margin="0,8,0,0">
                                         <Run Text="Пройдено уроков: " />
                                         <Run Text="{Binding CompletedLessons, Mode=OneWay}" />
                                         <Run Text=" из " />
@@ -105,14 +124,16 @@
 
                                 <Border Grid.Column="1"
                                         Background="{StaticResource SecondaryBackgroundBrush}"
-                                        CornerRadius="12" Padding="14">
+                                        CornerRadius="12"
+                                        Padding="14">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="Результат теста"
                                                    FontSize="12"
                                                    Foreground="{StaticResource TextMutedBrush}"
                                                    HorizontalAlignment="Center" />
                                         <TextBlock Text="{Binding TestScore, StringFormat={}{0}%}"
-                                                   FontSize="25" FontWeight="SemiBold"
+                                                   FontSize="25"
+                                                   FontWeight="SemiBold"
                                                    Foreground="{StaticResource AccentBrush}"
                                                    HorizontalAlignment="Center"
                                                    Margin="0,5,0,0" />

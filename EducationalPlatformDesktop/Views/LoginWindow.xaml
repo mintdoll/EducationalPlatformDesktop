@@ -11,10 +11,6 @@
         ResizeMode="NoResize"
         Background="#1A1A2E">
 
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </Window.Resources>
-
     <Grid>
         <Border Width="330"
                 Padding="28"
@@ -41,16 +37,16 @@
                            FontSize="12"
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
-                           Visibility="{Binding IsErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                           Visibility="{Binding IsErrorVisible, Converter={StaticResource BoolToVis}}" />
 
                 <TextBlock Text="{Binding SuccessMessage}"
                            Foreground="#86EFAC"
                            FontSize="12"
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
-                           Visibility="{Binding IsSuccessVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                           Visibility="{Binding IsSuccessVisible, Converter={StaticResource BoolToVis}}" />
 
-                <TextBlock Text="Логин"
+                <TextBlock Text="Email"
                            Foreground="#CECBF6"
                            Margin="0,8,0,6" />
 
